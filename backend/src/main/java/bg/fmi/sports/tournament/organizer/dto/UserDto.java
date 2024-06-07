@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 public class UserDto {
     private Long id;
@@ -15,4 +17,12 @@ public class UserDto {
     private String password;
     @Email(message = "Email should be valid")
     private String email;
+    @NotNull
+    private String role;
+
+    private LocalDateTime createdDate;
+    private LocalDateTime lastModifiedDate;
+
+    private Long createdBy;
+    private Long modifiedBy;
 }
