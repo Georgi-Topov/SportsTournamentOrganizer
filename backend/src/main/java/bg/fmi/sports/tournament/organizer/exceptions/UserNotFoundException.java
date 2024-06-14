@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @AllArgsConstructor
 @RequiredArgsConstructor
 @Getter
-public class InvalidRoleException extends RuntimeException {
+public class UserNotFoundException extends RuntimeException {
     private final String message;
     private Exception exception;
 }

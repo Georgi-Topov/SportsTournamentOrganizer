@@ -1,27 +1,37 @@
 package bg.fmi.sports.tournament.organizer.service;
 
+import bg.fmi.sports.tournament.organizer.config.JwtService;
+import bg.fmi.sports.tournament.organizer.dto.UserDto;
 import bg.fmi.sports.tournament.organizer.entity.User;
+import bg.fmi.sports.tournament.organizer.exceptions.UserNotFoundException;
+import bg.fmi.sports.tournament.organizer.mapper.UserMapper;
 import bg.fmi.sports.tournament.organizer.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
-    @Autowired
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
+    private final UserMapper userMapper;
 
     public Optional<User> getUserById(Long id) {
         return userRepository.findById(id);
     }
 
-    public User createUser(User user) {
-        return userRepository.save(user);
+    public UserDto registerUser(User user) {
+        var token = jwtService.generateToken(user);
+        userRepository.save(user);
+        UserDto res = userMapper.userToDto(user);
+        res.setToken(token);
+        return res;
     }
 
     public void removeUser(Long id) {
@@ -34,7 +44,17 @@ public class UserService {
             Optional.ofNullable(user.getUsername()).ifPresent(existingUser::setUsername);
             Optional.ofNullable(user.getPassword()).ifPresent(existingUser::setPassword);
             return userRepository.save(existingUser);
-        }).orElseThrow(() -> new RuntimeException("User does not exist"));
+        }).orElseThrow(() -> new UserNotFoundException("User does not exist"));
+    }
 
+    public UserDto authUser(User user) {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
+        );
+        UserDto res = userMapper.userToDto(userRepository.findByUsername(user.getUsername())
+                .orElseThrow(() -> new UserNotFoundException("User does not exist")));
+        var token = jwtService.generateToken(user);
+        res.setToken(token);
+        return res;
     }
 }

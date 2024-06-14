@@ -23,6 +23,8 @@ public class UserDto {
     private LocalDateTime createdDate;
     private LocalDateTime lastModifiedDate;
 
-    private Long createdBy;
-    private Long modifiedBy;
+//    private Long createdBy;
+//    private Long modifiedBy;
+
+    private String token;
 }

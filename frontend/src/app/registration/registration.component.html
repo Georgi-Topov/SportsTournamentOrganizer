@@ -1,0 +1,52 @@
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <h2 class="text-center mb-4">Registration form</h2>
+      <form [formGroup]="registration" (ngSubmit)="Register()">
+
+        <div class="form-group">
+          <label for="username">Name:</label>
+          <input id="username" class="form-control" formControlName="username">
+          <div class="m-2 alert alert-danger" *ngIf="registration.get('username')?.invalid
+          && registration.get('username')?.touched">
+            Name is required.
+          </div>
+        </div>
+
+
+        <div class="form-group">
+          <label for="email">Email:</label>
+          <input type="email" id="email" class="form-control" formControlName="email">
+          <div class="m-2 alert alert-danger" *ngIf="registration.get('email')?.invalid && registration.get('email')?.touched">
+            Enter a valid email.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <input type="password" id="password" class="form-control" formControlName="password">
+          <div class="m-2 alert alert-danger" *ngIf="registration.get('password')?.invalid
+             && registration.get('password')?.touched">
+            Password is required.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="role">Role</label>
+          <select class="form-control" id="role" formControlName="role">
+            <option>user</option>
+            <option>manager</option>
+            <option>admin</option>
+          </select>
+          <div class="m-2 alert alert-danger" *ngIf="registration.get('role')?.invalid
+             && registration.get('role')?.touched">
+            Role is required.
+          </div>
+        </div>
+
+        <br>
+        <button type="submit" class="btn btn-primary" [disabled]="registration.invalid">Submit</button>
+      </form>
+    </div>
+  </div>
+</div>

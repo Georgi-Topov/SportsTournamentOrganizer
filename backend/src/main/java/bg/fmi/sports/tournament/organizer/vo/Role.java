@@ -12,8 +12,7 @@ public enum Role {
     MANAGER("manager");
 
     @Getter
-    private String name;
-    private Map<String, Role> nameToEnum;
+    private final String name;
 
     Role(String name) {
         this.name = name;
@@ -23,6 +22,6 @@ public enum Role {
         return Arrays.stream(Role.values())
                 .filter(role -> role.getName().equals(name))
                 .findAny()
-                .orElseThrow(InvalidRoleException::new);
+                .orElseThrow(() -> new InvalidRoleException("Invalid role name: " + name));
     }
 }
