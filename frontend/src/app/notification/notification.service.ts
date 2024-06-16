@@ -15,4 +15,8 @@ export class NotificationService {
   showError(message: string) {
       this.toastr.error(message, "Something went wrong");
   }
+
+  showInfo(title: string, message: string) {
+    this.toastr.info(message, title);
+  }
 }

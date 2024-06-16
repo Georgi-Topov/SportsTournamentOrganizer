@@ -16,7 +16,7 @@ public class GlobalExceptionHandler {
 
     @Data
     @AllArgsConstructor
-    static public class ErrorResponse {
+    public static class ErrorResponse {
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd.MM.yyyy")
         private LocalDateTime timestamp;
         private String error;

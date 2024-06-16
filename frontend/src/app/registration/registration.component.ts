@@ -2,9 +2,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators} from "@angular/forms";
 import { UserService } from '../user/user.service';
 import {NgIf} from "@angular/common";
-import {User} from "../user/user";
 import {sha256} from "js-sha256";
 import {NotificationService} from "../notification/notification.service";
+import {JwtService} from "../jwt/jwt.service"
+import {RoleService} from "../user/role/role.service";
+import {Router} from "@angular/router";
 
 @Component({
   selector: 'app-registration',
@@ -28,7 +30,10 @@ export class RegistrationComponent {
 
   constructor(private fb: FormBuilder,
               private userService: UserService,
-              private notificationService: NotificationService) {
+              private notificationService: NotificationService,
+              private jwtService: JwtService,
+              private roleService: RoleService,
+              private router: Router) {
   }
 
   //TODO: saving of JWT token
@@ -38,16 +43,16 @@ export class RegistrationComponent {
     this.registration.reset();
 
     values.password = sha256(values.password);
-
+    console.log(values);
     this.userService.createUser(values).subscribe({
-        next: (response: User) => {
-          this.notificationService.showSuccess('Form submitted successfully!');
-        },
+        next: (response: any) => {
+          this.jwtService.saveToken(response.token);
+          this.roleService.saveRole(response.role);
+          this.router.navigate([''])
+            .then( () => this.notificationService.showSuccess('Form submitted successfully!') );
+          },
         error: err => {
           this.notificationService.showError(err.error.message);
-        },
-        complete: () => {
-          console.log("Done");
         }
       }
     );

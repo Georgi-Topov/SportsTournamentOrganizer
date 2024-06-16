@@ -48,7 +48,6 @@ public class UserController {
 
     @PostMapping("/auth")
     public ResponseEntity<UserDto> authUser(@RequestBody UserDto userDto) {
-        //System.out.println("OK");
         return new ResponseEntity<>(
                 userService.authUser(userMapper.dtoToUser(userDto)),
                 HttpStatus.OK

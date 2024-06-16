@@ -4,14 +4,14 @@ import bg.fmi.sports.tournament.organizer.exceptions.InvalidRoleException;
 import lombok.Getter;
 
 import java.util.Arrays;
-import java.util.Map;
 
+@Getter
 public enum Role {
     ADMIN("admin"),
     USER("user"),
-    MANAGER("manager");
+    MANAGER("manager"),
+    NONE("none");
 
-    @Getter
     private final String name;
 
     Role(String name) {
@@ -19,6 +19,9 @@ public enum Role {
     }
 
     public static Role getEnumByName(String name) {
+        if (name == null) {
+            return NONE;
+        }
         return Arrays.stream(Role.values())
                 .filter(role -> role.getName().equals(name))
                 .findAny()
