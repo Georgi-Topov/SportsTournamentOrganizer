@@ -20,7 +20,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: admin@sto.com
       PGADMIN_DEFAULT_PASSWORD: admin
     ports:
-      - "8080:80"
+      - "5050:80"
     depends_on:
       - postgres
 

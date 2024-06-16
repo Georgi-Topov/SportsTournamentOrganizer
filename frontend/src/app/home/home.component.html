@@ -1,0 +1,14 @@
+<p>home works!</p>
+<nav>
+  <div *ngIf="!roleService.hasRole()">
+    <a routerLink="/register">Registration</a>
+    <br>
+    <a routerLink="/auth">Login</a>
+    <br>
+  </div>
+  <a routerLink="">Home</a>
+  <div *ngIf="roleService.hasRole()">
+    <a href="#" (click)="logout()">Logout</a>
+  </div>
+</nav>
+<router-outlet></router-outlet>
