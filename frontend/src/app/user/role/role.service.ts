@@ -18,7 +18,7 @@ export class RoleService {
   }
 
   hasRole() : boolean {
-    return localStorage.getItem(this.key) !== null;
+    return typeof localStorage !== 'undefined' && localStorage.getItem(this.key) !== null;
   }
 
   removeRole() {

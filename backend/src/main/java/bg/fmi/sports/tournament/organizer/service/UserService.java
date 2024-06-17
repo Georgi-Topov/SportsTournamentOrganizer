@@ -3,7 +3,7 @@ package bg.fmi.sports.tournament.organizer.service;
 import bg.fmi.sports.tournament.organizer.config.JwtService;
 import bg.fmi.sports.tournament.organizer.dto.UserDto;
 import bg.fmi.sports.tournament.organizer.entity.User;
-import bg.fmi.sports.tournament.organizer.exceptions.UserNotFoundException;
+import bg.fmi.sports.tournament.organizer.exception.UserNotFoundException;
 import bg.fmi.sports.tournament.organizer.mapper.UserMapper;
 import bg.fmi.sports.tournament.organizer.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

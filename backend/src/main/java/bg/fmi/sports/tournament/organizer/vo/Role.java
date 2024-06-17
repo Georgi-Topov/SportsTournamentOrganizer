@@ -1,6 +1,6 @@
 package bg.fmi.sports.tournament.organizer.vo;
 
-import bg.fmi.sports.tournament.organizer.exceptions.InvalidRoleException;
+import bg.fmi.sports.tournament.organizer.exception.InvalidRoleException;
 import lombok.Getter;
 
 import java.util.Arrays;
