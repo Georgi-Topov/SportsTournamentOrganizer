@@ -10,5 +10,8 @@
   <div *ngIf="roleService.hasRole()">
     <a href="#" (click)="logout()">Logout</a>
   </div>
+  <div *ngIf="roleService.isAdmin() || roleService.isManager()">
+    <a routerLink="/panel">Panel</a>
+  </div>
 </nav>
 <router-outlet></router-outlet>

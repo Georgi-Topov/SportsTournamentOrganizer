@@ -7,6 +7,7 @@ import {NotificationService} from "../notification/notification.service";
 import {JwtService} from "../jwt/jwt.service"
 import {RoleService} from "../user/role/role.service";
 import {Router} from "@angular/router";
+import {UserDataService} from "../user/data/user-data.service";
 
 @Component({
   selector: 'app-registration',
@@ -33,7 +34,8 @@ export class RegistrationComponent {
               private notificationService: NotificationService,
               private jwtService: JwtService,
               private roleService: RoleService,
-              private router: Router) {
+              private router: Router,
+              private userData: UserDataService) {
   }
 
   //TODO: saving of JWT token
@@ -43,11 +45,16 @@ export class RegistrationComponent {
     this.registration.reset();
 
     values.password = sha256(values.password);
-    console.log(values);
+
     this.userService.createUser(values).subscribe({
         next: (response: any) => {
+
+          // TODO: maybe exists better solution???
           this.jwtService.saveToken(response.token);
           this.roleService.saveRole(response.role);
+          this.userData.saveName(response.username);
+          this.userData.saveEmail(response.email);
+
           this.router.navigate([''])
             .then( () => this.notificationService.showSuccess('Form submitted successfully!') );
           },

@@ -6,6 +6,8 @@ import { Injectable } from '@angular/core';
 export class RoleService {
 
   readonly key = "role";
+  readonly admin = "admin";
+  readonly manager = "manager";
 
   constructor() { }
 
@@ -23,5 +25,13 @@ export class RoleService {
 
   removeRole() {
     localStorage.removeItem(this.key);
+  }
+
+  isManager() : boolean {
+    return this.hasRole() && this.getRole() == this.manager;
+  }
+
+  isAdmin() : boolean {
+    return this.hasRole() && this.getRole() == this.manager;
   }
 }

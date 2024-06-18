@@ -1,0 +1,7 @@
+<div *ngIf="!roleService.isManager() && !roleService.isAdmin()">
+  <h1>404</h1>
+  <h2>Page not found</h2>
+</div>
+<div *ngIf="roleService.isAdmin() || roleService.isManager()">
+  <h3>Hi, {{userData.getName()}}</h3>
+</div>
