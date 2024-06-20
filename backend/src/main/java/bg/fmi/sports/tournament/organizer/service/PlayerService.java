@@ -3,9 +3,12 @@ package bg.fmi.sports.tournament.organizer.service;
 import bg.fmi.sports.tournament.organizer.entity.Player;
 import bg.fmi.sports.tournament.organizer.entity.embedded.Audit;
 import bg.fmi.sports.tournament.organizer.exception.PlayerAlreadyInTeamException;
+import bg.fmi.sports.tournament.organizer.exception.PlayerDuplicationException;
 import bg.fmi.sports.tournament.organizer.exception.PlayerNotFoundException;
+import bg.fmi.sports.tournament.organizer.repository.MembershipRepository;
 import bg.fmi.sports.tournament.organizer.repository.PlayerRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -16,16 +19,22 @@ import java.util.Optional;
 public class PlayerService {
 
     private final PlayerRepository playerRepository;
-    private final MembershipService membershipService;
+    private final MembershipRepository membershipRepository;
 
-    public PlayerService(PlayerRepository playerRepository, MembershipService membershipService) {
+    public PlayerService(PlayerRepository playerRepository, MembershipRepository membershipRepository) {
         this.playerRepository = playerRepository;
-        this.membershipService = membershipService;
+        this.membershipRepository = membershipRepository;
     }
 
     public Player createPlayer(Player player) {
         player.setAudit(new Audit());
-        return playerRepository.save(player);
+
+        try {
+            return playerRepository.save(player);
+        } catch (DataIntegrityViolationException ex) {
+            throw new PlayerDuplicationException(
+                "Player with the provided first name, last name and birthdate already exists", ex.getCause());
+        }
     }
 
     public Page<Player> findAllPlayers(Pageable pageable) {
@@ -51,11 +60,15 @@ public class PlayerService {
     }
 
     public void deletePlayerById(Long id) {
-        if (membershipService.isPlayerAssigned(id)) {
+        if (isPlayerAssigned(id)) {
             throw new PlayerAlreadyInTeamException("The player is assigned to a team");
         }
 
         playerRepository.deleteById(id);
+    }
+
+    public boolean isPlayerAssigned(Long id) {
+        return !membershipRepository.findByPlayerId(id).isEmpty();
     }
 
 }

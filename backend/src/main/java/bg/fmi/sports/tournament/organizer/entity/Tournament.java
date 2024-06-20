@@ -49,6 +49,10 @@ public class Tournament {
 
     private String description;
 
+    private Integer minimumPlayersPerTeam;
+
+    private Integer maximumPlayersPerTeam;
+
     // todo : add @ManyToOne relationship to the user(admin) who created the tournament
 
     @Column(insertable = true, updatable = false)

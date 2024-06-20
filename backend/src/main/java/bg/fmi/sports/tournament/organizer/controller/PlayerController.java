@@ -4,6 +4,7 @@ import bg.fmi.sports.tournament.organizer.dto.PlayerDto;
 import bg.fmi.sports.tournament.organizer.entity.Player;
 import bg.fmi.sports.tournament.organizer.mapper.PlayerMapper;
 import bg.fmi.sports.tournament.organizer.service.PlayerService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -30,7 +31,7 @@ public class PlayerController {
     }
 
     @PostMapping
-    public ResponseEntity<PlayerDto> createPlayer(@RequestBody PlayerDto playerDto) {
+    public ResponseEntity<PlayerDto> createPlayer(@Valid @RequestBody PlayerDto playerDto) {
         Player player = playerMapper.dtoToPlayer(playerDto);
         Player savedPlayer = playerService.createPlayer(player);
         return new ResponseEntity<>(playerMapper.playerToDto(savedPlayer), HttpStatus.CREATED);

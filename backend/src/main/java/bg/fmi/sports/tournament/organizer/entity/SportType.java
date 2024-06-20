@@ -29,10 +29,6 @@ public class SportType {
 
     private String sportType;
 
-    private Integer minimumPlayers;
-
-    private Integer maximumPlayers;
-
     @Version
     private Long version;
 

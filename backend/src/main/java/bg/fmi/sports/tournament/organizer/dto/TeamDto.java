@@ -1,5 +1,6 @@
 package bg.fmi.sports.tournament.organizer.dto;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,8 +19,10 @@ public class TeamDto {
 
     private Long id;
 
+    @NotNull(message = "The name of the team cannot be missing")
     private String name;
 
+    @NotNull(message = "The sport type of the team cannot be missing")
     private SportTypeDto sportType;
 
     // todo : add @ManyToOne relationship to the user(manager) who created the team

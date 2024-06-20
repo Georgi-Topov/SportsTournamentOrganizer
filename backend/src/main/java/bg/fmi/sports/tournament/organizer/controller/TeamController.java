@@ -1,13 +1,10 @@
 package bg.fmi.sports.tournament.organizer.controller;
 
-import bg.fmi.sports.tournament.organizer.dto.MembershipDto;
 import bg.fmi.sports.tournament.organizer.dto.TeamDto;
-import bg.fmi.sports.tournament.organizer.entity.Membership;
 import bg.fmi.sports.tournament.organizer.entity.Team;
-import bg.fmi.sports.tournament.organizer.mapper.MembershipMapper;
 import bg.fmi.sports.tournament.organizer.mapper.TeamMapper;
-import bg.fmi.sports.tournament.organizer.service.MembershipService;
 import bg.fmi.sports.tournament.organizer.service.TeamService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -27,19 +24,14 @@ public class TeamController {
 
     private final TeamService teamService;
     private final TeamMapper teamMapper;
-    private final MembershipService membershipService;
-    private final MembershipMapper membershipMapper;
 
-    public TeamController(TeamService teamService, TeamMapper teamMapper,
-                          MembershipService membershipService, MembershipMapper membershipMapper) {
+    public TeamController(TeamService teamService, TeamMapper teamMapper) {
         this.teamService = teamService;
         this.teamMapper = teamMapper;
-        this.membershipService = membershipService;
-        this.membershipMapper = membershipMapper;
     }
 
     @PostMapping
-    public ResponseEntity<TeamDto> createTeam(@RequestBody TeamDto teamDto) {
+    public ResponseEntity<TeamDto> createTeam(@Valid @RequestBody TeamDto teamDto) {
         Team team = teamMapper.dtoToTeam(teamDto);
         Team savedTeam = teamService.createTeam(team);
         return new ResponseEntity<>(teamMapper.teamToDto(savedTeam), HttpStatus.CREATED);
@@ -77,18 +69,6 @@ public class TeamController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @PostMapping("/{teamId}/players/{playerId}")
-    public ResponseEntity<TeamDto> registerPlayer(@PathVariable Long teamId, @PathVariable Long playerId) {
-        teamService.registerPlayer(teamId, playerId);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-    }
-
     // todo(maybe) : implement an endpoint to remove player from team (from membership table)
-
-    @GetMapping("/players")
-    public ResponseEntity<Page<MembershipDto>> findAllMemberships(Pageable pageable) {
-        Page<Membership> fetchedMemberships = membershipService.findAllMemberships(pageable);
-        return new ResponseEntity<>(fetchedMemberships.map(membershipMapper::membershipToDto), HttpStatus.OK);
-    }
 
 }
