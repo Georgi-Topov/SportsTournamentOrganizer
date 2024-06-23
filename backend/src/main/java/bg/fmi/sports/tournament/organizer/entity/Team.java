@@ -45,7 +45,9 @@ public class Team {
     @JoinColumn(name = "sport_type_id")
     private SportType sportType;
 
-    // todo : add @ManyToOne relationship to the user(manager) who created the team
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "creator_id")
+    private User creator;
 
     @Column(insertable = true, updatable = false)
     @CreatedDate

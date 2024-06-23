@@ -11,11 +11,16 @@ export class UserDataService {
   constructor() { }
 
   saveName(name: string) {
+    console.log(name);
     localStorage.setItem(this.keyName, name);
   }
 
   getName(): string | null {
     return localStorage.getItem(this.keyName);
+  }
+
+  removeName() {
+    localStorage.removeItem(this.keyName);
   }
 
   saveEmail(email: string) {
@@ -24,5 +29,9 @@ export class UserDataService {
 
   getEmail(email: string) : string | null {
     return localStorage.getItem(this.keyEmail);
+  }
+
+  removeEmail() {
+    localStorage.removeItem(this.keyEmail);
   }
 }

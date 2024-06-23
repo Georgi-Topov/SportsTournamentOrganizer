@@ -49,7 +49,9 @@ public class Tournament {
 
     private String description;
 
-    // todo : add @ManyToOne relationship to the user(admin) who created the tournament
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "creator_id")
+    private User creator;
 
     @Column(insertable = true, updatable = false)
     @CreatedDate

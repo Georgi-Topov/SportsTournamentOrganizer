@@ -1,7 +1,24 @@
-<div *ngIf="!roleService.isManager() && !roleService.isAdmin()">
+<!--@if (roleService.isAdmin() || roleService.isManager()) {-->
+<!--  <h3>Hi, {{userData.getName()}}</h3>-->
+<!--}-->
+<!--@else {-->
+<!--  <h1>404</h1>-->
+<!--  <h2>Page not found</h2>-->
+<!--}-->
+
+@if (roleService.isAdmin() || roleService.isManager()) {
+  <h3>Hi, {{userData.getName()}}</h3>
+  @if (roleService.isAdmin()) {
+    <div class="input-group mb-3 w-25">
+      <input type="text" class="form-control" placeholder="user id" aria-label="User Id" [(ngModel)]="userId">
+      <button class="btn btn-outline-secondary" type="button" (click)="getUserById()" [disabled]="">Get User</button>
+    </div>
+    <app-user-details [user]="user" ></app-user-details>
+  } @else {
+    <h3>U are manager</h3>
+    
+  }
+} @else {
   <h1>404</h1>
   <h2>Page not found</h2>
-</div>
-<div *ngIf="roleService.isAdmin() || roleService.isManager()">
-  <h3>Hi, {{userData.getName()}}</h3>
-</div>
+}

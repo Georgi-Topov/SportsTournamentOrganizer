@@ -1,17 +1,21 @@
+<!--@if (!loader.isLoading()) {-->
 <p>home works!</p>
 <nav>
-  <div *ngIf="!roleService.hasRole()">
-    <a routerLink="/register">Registration</a>
+  <a routerLink="" class="btn btn-primary m-1">Home</a>
+  <br>
+  @if(!roleService.hasRole()) {
+    <a routerLink="/register" class="btn btn-primary m-1">Registration</a>
     <br>
-    <a routerLink="/auth">Login</a>
+    <a routerLink="/auth" class="btn btn-primary m-1">Login</a>
     <br>
-  </div>
-  <a routerLink="">Home</a>
-  <div *ngIf="roleService.hasRole()">
-    <a href="#" (click)="logout()">Logout</a>
-  </div>
-  <div *ngIf="roleService.isAdmin() || roleService.isManager()">
-    <a routerLink="/panel">Panel</a>
-  </div>
+  } @else {
+    <a href="#" (click)="logout()" class="btn btn-primary m-1">Logout</a>
+    <br>
+  }
+  @if (!roleService.isUser()) {
+    <a href="#" routerLink="/panel" class="btn btn-primary m-1">Panel</a>
+    <br>
+  }
 </nav>
+<!--}-->
 <router-outlet></router-outlet>

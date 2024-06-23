@@ -8,10 +8,12 @@ export class RoleService {
   readonly key = "role";
   readonly admin = "admin";
   readonly manager = "manager";
+  readonly user  = "user";
 
   constructor() { }
 
   saveRole(role: string) {
+    console.log(role);
     localStorage.setItem(this.key, role);
   }
 
@@ -32,6 +34,10 @@ export class RoleService {
   }
 
   isAdmin() : boolean {
-    return this.hasRole() && this.getRole() == this.manager;
+    return this.hasRole() && this.getRole() == this.admin;
+  }
+
+  isUser() : boolean {
+    return this.hasRole() && this.getRole() == this.user;
   }
 }

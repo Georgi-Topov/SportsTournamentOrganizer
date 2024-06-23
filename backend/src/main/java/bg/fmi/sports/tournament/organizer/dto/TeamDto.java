@@ -1,5 +1,9 @@
 package bg.fmi.sports.tournament.organizer.dto;
 
+import bg.fmi.sports.tournament.organizer.entity.User;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

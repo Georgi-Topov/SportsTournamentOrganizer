@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import {Component, OnInit, ViewChild} from '@angular/core';
 import {RouterLink, RouterOutlet} from "@angular/router";
 
 @Component({
@@ -7,11 +7,13 @@ import {RouterLink, RouterOutlet} from "@angular/router";
   templateUrl: './app.component.html',
   imports: [
     RouterOutlet,
-    RouterLink
-
+    RouterLink,
   ],
   styleUrl: './app.component.css'
 })
 
-export class AppComponent {
+export class AppComponent{
+
+  constructor() {
+  }
 }
