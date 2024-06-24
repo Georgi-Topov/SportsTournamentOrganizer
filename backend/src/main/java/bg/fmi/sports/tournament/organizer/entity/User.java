@@ -9,6 +9,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedBy;
@@ -23,6 +24,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @Entity
@@ -49,6 +51,12 @@ public class User implements UserDetails {
     @LastModifiedDate
     @Column(insertable = false)
     private LocalDateTime lastModifiedDate;
+
+    @OneToMany(mappedBy = "user")
+    Set<TournamentNotification> tournamentNotifications;
+
+    @OneToMany(mappedBy = "user")
+    Set<TeamNotification> teamNotifications;
 
 //    @CreatedBy
 //    @Column(
