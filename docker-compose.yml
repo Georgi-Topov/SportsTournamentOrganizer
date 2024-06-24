@@ -24,5 +24,14 @@ services:
     depends_on:
       - postgres
 
+#  backend:
+#    image: white/sport_tournament_organizer:latest
+#    container_name: backend
+#    depends_on:
+#      - postgres
+
+#  frontend:
+#    image: white/sport_tournament_organizer_frontend:latest
+
 volumes:
   postgres_data:
