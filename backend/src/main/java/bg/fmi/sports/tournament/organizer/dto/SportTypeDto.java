@@ -1,6 +1,8 @@
 package bg.fmi.sports.tournament.organizer.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Null;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,9 +18,11 @@ import java.util.Objects;
 @Builder
 public class SportTypeDto {
 
+    @Null(message = "The id of the sport must not be entered manually")
     private Long id;
 
-    @NotNull(message = "The type of the sport cannot be missing")
+    @NotNull(message = "The type of the sport cannot be null")
+    @NotBlank(message = "The type of sport must have at least 1 non-white space character")
     private String sportType;
 
     private Long version;

@@ -11,6 +11,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -37,18 +38,23 @@ public class Tournament {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @NotNull(message = "The name of the tournament cannot be null")
     private String name;
 
+    @NotNull(message = "The sport type of the tournament cannot be null")
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "sport_type_id")
     private SportType sportType;
 
+    @NotNull(message = "The start date of the tournament cannot be null")
     private LocalDateTime startDate;
 
+    @NotNull(message = "The end date of the tournament cannot be null")
     private LocalDateTime endDate;
 
     private String description;
 
+    @NotNull(message = "The minimum number of players of a participating team cannot be null")
     private Integer minimumPlayersPerTeam;
 
     private Integer maximumPlayersPerTeam;

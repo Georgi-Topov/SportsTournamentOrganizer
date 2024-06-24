@@ -18,10 +18,10 @@ public class MembershipDto {
 
     private MembershipId id;
 
-    @NotNull(message = "The team to have a player assigned to it cannot be unknown")
+    @NotNull(message = "The team to have a player assigned to it cannot be null")
     private TeamDto team;
 
-    @NotNull(message = "Assigned player cannot be unknown")
+    @NotNull(message = "Assigned player cannot be null")
     private PlayerDto player;
 
     private Audit audit;

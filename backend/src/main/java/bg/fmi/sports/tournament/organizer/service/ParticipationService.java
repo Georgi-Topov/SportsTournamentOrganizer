@@ -34,7 +34,7 @@ public class ParticipationService extends AffiliationService {
         this.teamRepository = teamRepository;
     }
 
-    public void addTeamToTournament(Tournament tournament, Team team) {
+    private Participation addTeamToTournament(Tournament tournament, Team team) {
         ParticipationId participationId = new ParticipationId(tournament.getId(), team.getId());
 
         Participation participation = Participation.builder()
@@ -48,10 +48,10 @@ public class ParticipationService extends AffiliationService {
             throw new TeamAlreadyInTournamentException("The team is already registered to the tournament");
         }
 
-        participationRepository.save(participation);
+        return participationRepository.save(participation);
     }
 
-    public void registerTeamToTournament(Long tournamentId, Long teamId) {
+    public Participation registerTeamToTournament(Long tournamentId, Long teamId) {
         Optional<Tournament> tournament = tournamentRepository.findById(tournamentId);
         if (tournament.isEmpty()) {
             throw new TournamentNotFoundException("Tournament with an id of " + tournamentId
@@ -71,21 +71,22 @@ public class ParticipationService extends AffiliationService {
         Tournament latestTournamentOfTeam = checkTeamParticipationStatus(teamId).orElse(null);
         checkTeamCorrespondenceToTournament(fetchedTournament, fetchedTeam, latestTournamentOfTeam);
 
-        addTeamToTournament(fetchedTournament, fetchedTeam);
+        return addTeamToTournament(fetchedTournament, fetchedTeam);
     }
 
-    public void checkIfTournamentHasStarted(Tournament fetchedTournament) {
+    private void checkIfTournamentHasStarted(Tournament fetchedTournament) {
         if (LocalDateTime.now().isAfter(fetchedTournament.getStartDate())) {
             throw new TournamentOverException("Cannot register the team to a tournament which has already started");
         }
     }
 
-    public void checkTeamCorrespondenceToTournament(Tournament tournament, Team team,
+    private void checkTeamCorrespondenceToTournament(Tournament tournament, Team team,
                                                     Tournament latestTournament) {
-        if (tournament.getSportType() != team.getSportType()) {
+
+        if (!tournament.getSportType().equals(team.getSportType())) {
             throw new TeamToTournamentBadCorrespondenceException(
                 "The sport type of the team does not match the sport type of the tournament which is "
-                    + tournament.getSportType()
+                    + tournament.getSportType().getSportType()
             );
         }
 
@@ -102,7 +103,7 @@ public class ParticipationService extends AffiliationService {
         if (tournament.getMinimumPlayersPerTeam() > numberOfPlayersInTeamForTournament) {
             throw new TeamToTournamentBadCorrespondenceException(
                 "Team needs to have at least " + tournament.getMinimumPlayersPerTeam()
-                    + " to participate in the tournament. Now it has " + numberOfPlayersInTeamForTournament
+                    + " players to participate in the tournament. Now it has " + numberOfPlayersInTeamForTournament
             );
         }
 

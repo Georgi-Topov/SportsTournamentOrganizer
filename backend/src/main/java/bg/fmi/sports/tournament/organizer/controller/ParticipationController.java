@@ -34,8 +34,9 @@ public class ParticipationController {
     public ResponseEntity<ParticipationDto> registerTeamToTournament(
         @PathVariable Long tournamentId, @PathVariable Long teamId
     ) {
-        ((ParticipationService)participationService).registerTeamToTournament(tournamentId, teamId);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        Participation savedParticipation =
+            ((ParticipationService)participationService).registerTeamToTournament(tournamentId, teamId);
+        return new ResponseEntity<>(participationMapper.participationToDto(savedParticipation), HttpStatus.CREATED);
     }
 
     @GetMapping
