@@ -12,7 +12,7 @@
     <a href="#" (click)="logout()" class="btn btn-primary m-1">Logout</a>
     <br>
   }
-  @if (!roleService.isUser()) {
+  @if (!roleService.isUser() && roleService.hasRole()) {
     <a href="#" routerLink="/panel" class="btn btn-primary m-1">Panel</a>
     <br>
   }

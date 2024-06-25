@@ -58,19 +58,9 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user")
     Set<TeamNotification> teamNotifications;
 
-//    @CreatedBy
-//    @Column(
-//            nullable = false,
-//            updatable = false
-//    )
-//    private Long createdBy;
-//    @LastModifiedBy
-//    @Column(insertable = false)
-//    private Long modifiedBy;
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role.getName()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.getName()));
     }
 
     @Override
