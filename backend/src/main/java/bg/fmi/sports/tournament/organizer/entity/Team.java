@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import jakarta.validation.constraints.NotBlank;
@@ -25,6 +26,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.Set;
 
 @Log
 @Getter
@@ -50,7 +52,9 @@ public class Team {
     @JoinColumn(name = "sport_type_id")
     private SportType sportType;
 
-    // todo : add @ManyToOne relationship to the user(manager) who created the team
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "creator_id")
+    private User creator;
 
     @Column(insertable = true, updatable = false)
     @CreatedDate
@@ -62,6 +66,9 @@ public class Team {
 
     @Version
     private Long version;
+
+    @OneToMany(mappedBy = "team")
+    Set<TeamNotification> notification;
 
     @Override
     public boolean equals(Object o) {

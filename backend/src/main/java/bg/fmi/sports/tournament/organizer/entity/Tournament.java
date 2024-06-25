@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import jakarta.validation.constraints.NotNull;
@@ -23,6 +24,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -60,6 +62,9 @@ public class Tournament {
     private Integer maximumPlayersPerTeam;
 
     // todo : add @ManyToOne relationship to the user(admin) who created the tournament
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "creator_id")
+    private User creator;
 
     @Column(insertable = true, updatable = false)
     @CreatedDate
@@ -71,6 +76,9 @@ public class Tournament {
 
     @Version
     private Long version;
+
+    @OneToMany(mappedBy = "tournament")
+    Set<TournamentNotification> notification;
 
     @Override
     public boolean equals(Object o) {

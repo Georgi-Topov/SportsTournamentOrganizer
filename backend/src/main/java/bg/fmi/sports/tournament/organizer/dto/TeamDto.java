@@ -1,5 +1,9 @@
 package bg.fmi.sports.tournament.organizer.dto;
 
+import bg.fmi.sports.tournament.organizer.entity.User;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
