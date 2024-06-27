@@ -1,10 +1,13 @@
 package bg.fmi.sports.tournament.organizer.controller;
 
 import bg.fmi.sports.tournament.organizer.dto.TournamentDto;
+import bg.fmi.sports.tournament.organizer.dto.TournamentPartialResponseDto;
 import bg.fmi.sports.tournament.organizer.entity.Tournament;
 import bg.fmi.sports.tournament.organizer.mapper.TournamentMapper;
 import bg.fmi.sports.tournament.organizer.service.TournamentService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -31,16 +34,19 @@ public class TournamentController {
     }
 
     @PostMapping
-    public ResponseEntity<TournamentDto> createTournament(@Valid @RequestBody TournamentDto tournamentDto) {
+    public ResponseEntity<TournamentDto> createTournament(@NotNull HttpServletRequest request,
+                                                          @Valid @RequestBody TournamentDto tournamentDto) {
         Tournament tournament = tournamentMapper.dtoToTournament(tournamentDto);
-        Tournament savedTournament = tournamentService.createTournament(tournament);
+        Tournament savedTournament = tournamentService.createTournament(tournament, request);
         return new ResponseEntity<>(tournamentMapper.tournamentToDto(savedTournament), HttpStatus.CREATED);
     }
 
     @GetMapping
-    public ResponseEntity<Page<TournamentDto>> findAllTournaments(Pageable pageable) {
+    public ResponseEntity<Page<TournamentPartialResponseDto>> findAllTournaments(Pageable pageable) {
         Page<Tournament> fetchedTournaments = tournamentService.findAllTournaments(pageable);
-        return new ResponseEntity<>(fetchedTournaments.map(tournamentMapper::tournamentToDto), HttpStatus.OK);
+        return new ResponseEntity<>(
+            fetchedTournaments.map(tournamentMapper::tournamentToPartialResponseDto), HttpStatus.OK
+        );
     }
 
     @GetMapping("/{id}")
@@ -54,22 +60,20 @@ public class TournamentController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<TournamentDto> partiallyUpdateTournamentById(
+    public ResponseEntity<TournamentDto> partiallyUpdateTournamentById(@NotNull HttpServletRequest request,
         @PathVariable Long id, @RequestBody TournamentDto tournamentDto) {
 
         Tournament tournament = tournamentMapper.dtoToTournament(tournamentDto);
-        Tournament modifiedTournament = tournamentService.partiallyUpdateTournamentById(id, tournament);
+        Tournament modifiedTournament = tournamentService.partiallyUpdateTournamentById(id, tournament, request);
 
         return new ResponseEntity<>(tournamentMapper.tournamentToDto(modifiedTournament), HttpStatus.OK);
     }
 
-//    @DeleteMapping("/{id}")
-//    public ResponseEntity<TournamentDto> deleteTeamById(@PathVariable Long id) {
-//        tournamentService.deleteTeamById(id);
-//
-//        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-//    }
-
-    // todo(maybe) : implement an endpoint to deregister team from tournament (from participation table)
+    @DeleteMapping("/{id}")
+    public ResponseEntity<TournamentDto> deleteTournamentById(@NotNull HttpServletRequest request,
+                                                              @PathVariable Long id) {
+        tournamentService.deleteTournamentById(id, request);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 
 }

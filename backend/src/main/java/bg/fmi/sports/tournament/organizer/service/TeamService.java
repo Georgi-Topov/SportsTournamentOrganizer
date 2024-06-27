@@ -2,14 +2,19 @@ package bg.fmi.sports.tournament.organizer.service;
 
 import bg.fmi.sports.tournament.organizer.entity.SportType;
 import bg.fmi.sports.tournament.organizer.entity.Team;
+import bg.fmi.sports.tournament.organizer.entity.User;
+import bg.fmi.sports.tournament.organizer.entity.embedded.Audit;
 import bg.fmi.sports.tournament.organizer.exception.MissingSportTypeException;
 import bg.fmi.sports.tournament.organizer.exception.PlayerAlreadyInTeamException;
 import bg.fmi.sports.tournament.organizer.exception.TeamAlreadyInTournamentException;
 import bg.fmi.sports.tournament.organizer.exception.TeamNotFoundException;
+import bg.fmi.sports.tournament.organizer.exception.UserNotAuthorizedException;
 import bg.fmi.sports.tournament.organizer.repository.MembershipRepository;
 import bg.fmi.sports.tournament.organizer.repository.ParticipationRepository;
 import bg.fmi.sports.tournament.organizer.repository.SportTypeRepository;
 import bg.fmi.sports.tournament.organizer.repository.TeamRepository;
+import bg.fmi.sports.tournament.organizer.vo.Role;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,22 +25,38 @@ import java.util.Optional;
 @Service
 public class TeamService {
 
+    private final UserService userService;
     private final TeamRepository teamRepository;
     private final SportTypeRepository sportTypeRepository;
     private final MembershipRepository membershipRepository;
     private final ParticipationRepository participationRepository;
 
-    public TeamService(TeamRepository teamRepository, SportTypeRepository sportTypeRepository,
+    public TeamService(UserService userService, TeamRepository teamRepository, SportTypeRepository sportTypeRepository,
                        MembershipRepository membershipRepository, ParticipationRepository participationRepository) {
+        this.userService = userService;
         this.teamRepository = teamRepository;
         this.sportTypeRepository = sportTypeRepository;
         this.membershipRepository = membershipRepository;
         this.participationRepository = participationRepository;
     }
 
-    public Team createTeam(Team team) {
+    public Team createTeam(Team team, HttpServletRequest request) {
+        User currentUser = userService.getUserFromTokenInAuthorizationHeader(request);
+        if (currentUser.getRole() != Role.MANAGER) {
+            throw new UserNotAuthorizedException("Only a user with a manager role can create a team");
+        }
+
         setSportTypeWithoutDuplication(team);
-        return teamRepository.save(team);
+
+        team.setAudit(Audit.builder().build());
+        Team savedTeam = teamRepository.save(team);
+        savedTeam.setAudit(Audit.builder()
+            .createdDate(savedTeam.getAudit().getCreatedDate())
+            .createdBy(savedTeam.getAudit().getCreatedBy())
+            .lastModifiedDate(null)
+            .lastModifiedBy(null)
+            .build());
+        return savedTeam;
     }
 
     public Page<Team> findAllTeams(Pageable pageable) {
@@ -47,27 +68,41 @@ public class TeamService {
     }
 
     @Transactional
-    public Team partiallyUpdateTeamById(Long id, Team team) {
+    public Team partiallyUpdateTeamById(Long id, Team team, HttpServletRequest request) {
         team.setId(id);
 
         return teamRepository.findById(id).map(fetchedTeam -> {
-            Optional.ofNullable(team.getName()).ifPresent(fetchedTeam::setName);
+            User currentUser = userService.getUserFromTokenInAuthorizationHeader(request);
+            if (!currentUser.getId().equals(fetchedTeam.getAudit().getCreatedBy())) {
+                throw new UserNotAuthorizedException("Only the owning manager can update the team");
+            }
 
+            Optional.ofNullable(team.getName()).ifPresent(fetchedTeam::setName);
             // todo(maybe) : make it possible to change owning manager
             return teamRepository.save(fetchedTeam);
-        }).orElseThrow(() -> new TeamNotFoundException("Team can not be found in the database"));
+        }).orElseThrow(() -> new TeamNotFoundException("There is no team with the provided id"));
     }
 
-    public void deleteTeamById(Long id) {
+    public void deleteTeamById(Long id, HttpServletRequest request) {
+        Team team = teamRepository.findById(id).map(fetchedTeam -> {
+            User currentUser = userService.getUserFromTokenInAuthorizationHeader(request);
+
+            if (!currentUser.getId().equals(fetchedTeam.getAudit().getCreatedBy())) {
+                throw new UserNotAuthorizedException("Only the owning manager can delete the team");
+            }
+
+            return fetchedTeam;
+        }).orElseThrow(() -> new TeamNotFoundException("There is no team with the provided id"));
+
         if (isTeamHavingPlayers(id)) {
             throw new PlayerAlreadyInTeamException("There are players in the team");
         }
 
         if (isTeamRegistered(id)) {
-            throw new TeamAlreadyInTournamentException("The team is registered to a tournament");
+            throw new TeamAlreadyInTournamentException("The team is registered for a tournament");
         }
 
-        teamRepository.findById(id).ifPresent(team -> team.setSportType(null));
+        team.setSportType(null);
         teamRepository.deleteById(id);
     }
 

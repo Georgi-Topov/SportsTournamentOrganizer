@@ -8,7 +8,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -25,18 +27,20 @@ import java.util.Objects;
 @EntityListeners(AuditingEntityListener.class)
 public class Audit implements Serializable {
 
-    @Column(insertable = true, updatable = false)
+    @Column(nullable = false, updatable = false)
     @CreatedDate
     private LocalDateTime createdDate;
 
-    @Column(insertable = false, updatable = true)
+    @Column(insertable = false)
     @LastModifiedDate
     private LocalDateTime lastModifiedDate;
 
-    @Column(insertable = true, updatable = false)
+    @Column(nullable = false, updatable = false)
+    @CreatedBy
     private Long createdBy;
 
-    @Column(insertable = false, updatable = true)
+    @LastModifiedBy
+    @Column(insertable = false)
     private Long lastModifiedBy;
 
     @Override

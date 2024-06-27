@@ -1,10 +1,13 @@
 package bg.fmi.sports.tournament.organizer.controller;
 
 import bg.fmi.sports.tournament.organizer.dto.PlayerDto;
+import bg.fmi.sports.tournament.organizer.dto.PlayerPartialResponseDto;
 import bg.fmi.sports.tournament.organizer.entity.Player;
 import bg.fmi.sports.tournament.organizer.mapper.PlayerMapper;
 import bg.fmi.sports.tournament.organizer.service.PlayerService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -31,16 +34,17 @@ public class PlayerController {
     }
 
     @PostMapping
-    public ResponseEntity<PlayerDto> createPlayer(@Valid @RequestBody PlayerDto playerDto) {
+    public ResponseEntity<PlayerDto> createPlayer(@NotNull HttpServletRequest request,
+                                                  @Valid @RequestBody PlayerDto playerDto) {
         Player player = playerMapper.dtoToPlayer(playerDto);
-        Player savedPlayer = playerService.createPlayer(player);
+        Player savedPlayer = playerService.createPlayer(player, request);
         return new ResponseEntity<>(playerMapper.playerToDto(savedPlayer), HttpStatus.CREATED);
     }
 
     @GetMapping
-    public ResponseEntity<Page<PlayerDto>> findAllPlayers(Pageable pageable) {
+    public ResponseEntity<Page<PlayerPartialResponseDto>> findAllPlayers(Pageable pageable) {
         Page<Player> fetchedPlayers = playerService.findAllPlayers(pageable);
-        return new ResponseEntity<>(fetchedPlayers.map(playerMapper::playerToDto), HttpStatus.OK);
+        return new ResponseEntity<>(fetchedPlayers.map(playerMapper::playerToPartialResponseDto), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
@@ -54,18 +58,18 @@ public class PlayerController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<PlayerDto> partiallyUpdatePlayerById(
+    public ResponseEntity<PlayerDto> partiallyUpdatePlayerById(@NotNull HttpServletRequest request,
         @PathVariable Long id, @RequestBody PlayerDto playerDto) {
 
         Player player = playerMapper.dtoToPlayer(playerDto);
-        Player modifiedPlayer = playerService.partiallyUpdatePlayerById(id, player);
+        Player modifiedPlayer = playerService.partiallyUpdatePlayerById(id, player, request);
 
         return new ResponseEntity<>(playerMapper.playerToDto(modifiedPlayer), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<PlayerDto> deletePlayerById(@PathVariable Long id) {
-        playerService.deletePlayerById(id);
+    public ResponseEntity<PlayerDto> deletePlayerById(@NotNull HttpServletRequest request, @PathVariable Long id) {
+        playerService.deletePlayerById(id, request);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 

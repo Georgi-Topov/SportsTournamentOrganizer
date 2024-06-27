@@ -1,7 +1,5 @@
 package bg.fmi.sports.tournament.organizer.dto;
 
-import bg.fmi.sports.tournament.organizer.entity.embedded.Audit;
-import jakarta.persistence.Embedded;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
@@ -18,29 +16,25 @@ import java.util.Objects;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TeamDto {
+public class PlayerPartialResponseDto {
 
-    @Null(message = "The id of the team must not be entered manually")
+    @Null(message = "The id of the player must not be entered manually")
     private Long id;
 
-    @NotNull(message = "The name of the team cannot be null")
-    @NotBlank(message = "The name of the team must have at least 1 non-white space character")
-    private String name;
+    @NotNull(message = "Player's first name cannot be null")
+    @NotBlank(message = "Player's first name must have at least 1 non-white space character")
+    private String firstName;
 
-    @NotNull(message = "The sport type of the team cannot be null")
-    private SportTypeDto sportType;
-
-    @Embedded
-    private Audit audit;
-
-    private Long version;
+    @NotNull(message = "Player's last name cannot be null")
+    @NotBlank(message = "Player's last name must have at least 1 non-white space character")
+    private String lastName;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        TeamDto teamDto = (TeamDto) o;
-        return Objects.equals(id, teamDto.id);
+        PlayerPartialResponseDto that = (PlayerPartialResponseDto) o;
+        return Objects.equals(id, that.id);
     }
 
     @Override

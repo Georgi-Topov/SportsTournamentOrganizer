@@ -1,7 +1,8 @@
 package bg.fmi.sports.tournament.organizer.entity;
 
+import bg.fmi.sports.tournament.organizer.entity.embedded.Audit;
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
@@ -20,11 +21,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.java.Log;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Set;
 
@@ -52,17 +50,8 @@ public class Team {
     @JoinColumn(name = "sport_type_id")
     private SportType sportType;
 
-    @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "creator_id")
-    private User creator;
-
-    @Column(insertable = true, updatable = false)
-    @CreatedDate
-    private LocalDateTime createdDate;
-
-    @Column(insertable = false, updatable = true)
-    @LastModifiedDate
-    private LocalDateTime lastModifiedDate;
+    @Embedded
+    private Audit audit;
 
     @Version
     private Long version;

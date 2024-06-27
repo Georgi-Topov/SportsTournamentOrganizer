@@ -6,7 +6,6 @@ import bg.fmi.sports.tournament.organizer.entity.Tournament;
 import bg.fmi.sports.tournament.organizer.entity.embedded.Audit;
 import bg.fmi.sports.tournament.organizer.entity.embedded.ParticipationId;
 import bg.fmi.sports.tournament.organizer.exception.TeamAlreadyInTournamentException;
-import bg.fmi.sports.tournament.organizer.exception.TeamNotFoundException;
 import bg.fmi.sports.tournament.organizer.exception.TeamToTournamentBadCorrespondenceException;
 import bg.fmi.sports.tournament.organizer.exception.TournamentNotFoundException;
 import bg.fmi.sports.tournament.organizer.exception.TournamentOverException;
@@ -14,6 +13,7 @@ import bg.fmi.sports.tournament.organizer.repository.MembershipRepository;
 import bg.fmi.sports.tournament.organizer.repository.ParticipationRepository;
 import bg.fmi.sports.tournament.organizer.repository.TeamRepository;
 import bg.fmi.sports.tournament.organizer.repository.TournamentRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -24,14 +24,12 @@ import java.util.Set;
 public class ParticipationService extends AffiliationService {
 
     private final MembershipRepository membershipRepository;
-    private final TeamRepository teamRepository;
 
-    public ParticipationService(ParticipationRepository participationRepository,
+    public ParticipationService(UserService userService, ParticipationRepository participationRepository,
                                 MembershipRepository membershipRepository,
                                 TeamRepository teamRepository, TournamentRepository tournamentRepository) {
-        super(participationRepository, tournamentRepository);
+        super(userService, participationRepository, tournamentRepository, teamRepository);
         this.membershipRepository = membershipRepository;
-        this.teamRepository = teamRepository;
     }
 
     private Participation addTeamToTournament(Tournament tournament, Team team) {
@@ -41,30 +39,21 @@ public class ParticipationService extends AffiliationService {
             .id(participationId)
             .tournament(tournament)
             .team(team)
-            .audit(new Audit())
+            .audit(Audit.builder().build())
             .build();
 
         if (participationRepository.existsById(new ParticipationId(tournament.getId(), team.getId()))) {
-            throw new TeamAlreadyInTournamentException("The team is already registered to the tournament");
+            throw new TeamAlreadyInTournamentException("The team is already registered for the tournament");
         }
 
         return participationRepository.save(participation);
     }
 
-    public Participation registerTeamToTournament(Long tournamentId, Long teamId) {
-        Optional<Tournament> tournament = tournamentRepository.findById(tournamentId);
-        if (tournament.isEmpty()) {
-            throw new TournamentNotFoundException("Tournament with an id of " + tournamentId
-                + " is not present in the database");
-        }
+    public Participation registerTeamToTournament(Long tournamentId, Long teamId, HttpServletRequest request) {
+        Tournament fetchedTournament = checkTournamentPresenceInTheDatabase(tournamentId);
+        Team fetchedTeam = checkTeamPresenceInTheDatabase(teamId);
 
-        Optional<Team> team = teamRepository.findById(teamId);
-        if (team.isEmpty()) {
-            throw new TeamNotFoundException("Team with an id of " + teamId + " is not present in the database");
-        }
-
-        Tournament fetchedTournament = tournament.get();
-        Team fetchedTeam = team.get();
+        validateTeamOwnership(fetchedTeam, request);
 
         checkIfTournamentHasStarted(fetchedTournament);
 
@@ -74,9 +63,19 @@ public class ParticipationService extends AffiliationService {
         return addTeamToTournament(fetchedTournament, fetchedTeam);
     }
 
+    private Tournament checkTournamentPresenceInTheDatabase(Long tournamentId) {
+        Optional<Tournament> tournament = tournamentRepository.findById(tournamentId);
+
+        if (tournament.isEmpty()) {
+            throw new TournamentNotFoundException("There is no tournament with an id " + tournamentId);
+        } else {
+            return tournament.get();
+        }
+    }
+
     private void checkIfTournamentHasStarted(Tournament fetchedTournament) {
         if (LocalDateTime.now().isAfter(fetchedTournament.getStartDate())) {
-            throw new TournamentOverException("Cannot register the team to a tournament which has already started");
+            throw new TournamentOverException("Cannot register the team for a tournament which has already started");
         }
     }
 
@@ -107,11 +106,12 @@ public class ParticipationService extends AffiliationService {
             );
         }
 
-        // todo(maybe) : check if the number of players in the team <= maxPlayersPerTeam
     }
 
 
     public Set<Participation> findAllParticipatingTeams(Long tournamentId) {
+        checkTournamentPresenceInTheDatabase(tournamentId);
+
         return participationRepository.findByTournamentId(tournamentId);
     }
 }

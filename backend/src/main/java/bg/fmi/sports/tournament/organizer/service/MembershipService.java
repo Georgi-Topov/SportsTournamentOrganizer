@@ -9,66 +9,50 @@ import bg.fmi.sports.tournament.organizer.entity.embedded.MembershipId;
 import bg.fmi.sports.tournament.organizer.exception.PlayerAlreadyInTeamException;
 import bg.fmi.sports.tournament.organizer.exception.PlayerNotFoundException;
 import bg.fmi.sports.tournament.organizer.exception.TeamAlreadyInTournamentException;
-import bg.fmi.sports.tournament.organizer.exception.TeamNotFoundException;
 import bg.fmi.sports.tournament.organizer.exception.TournamentNotFoundException;
 import bg.fmi.sports.tournament.organizer.repository.MembershipRepository;
 import bg.fmi.sports.tournament.organizer.repository.ParticipationRepository;
 import bg.fmi.sports.tournament.organizer.repository.PlayerRepository;
 import bg.fmi.sports.tournament.organizer.repository.TeamRepository;
 import bg.fmi.sports.tournament.organizer.repository.TournamentRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.Set;
 
 @Service("membership")
 public class MembershipService extends AffiliationService {
 
     private final MembershipRepository membershipRepository;
     private final PlayerRepository playerRepository;
-    private final TeamRepository teamRepository;
 
-    public MembershipService(TournamentRepository tournamentRepository,
+    public MembershipService(UserService userService, TournamentRepository tournamentRepository,
                              MembershipRepository membershipRepository, ParticipationRepository participationRepository,
                              PlayerRepository playerRepository, TeamRepository teamRepository) {
-        super(participationRepository, tournamentRepository);
+        super(userService, participationRepository, tournamentRepository, teamRepository);
         this.membershipRepository = membershipRepository;
         this.playerRepository = playerRepository;
-        this.teamRepository = teamRepository;
     }
 
     private Membership addPlayerToTeam(Team team, Player player) {
-        MembershipId membershipId = new MembershipId(team.getId(), player.getId());
+        MembershipId membershipId = new MembershipId(team.getId(), player.getId(), Audit.builder().build());
 
         Membership membership = Membership.builder()
             .id(membershipId)
             .team(team)
             .player(player)
-            .audit(new Audit())
             .build();
-
-        if (membershipRepository.existsById(new MembershipId(team.getId(), player.getId()))) {
-            throw new PlayerAlreadyInTeamException("The player is already assigned to the team");
-        }
 
         return membershipRepository.save(membership);
     }
 
-    public Membership assignPlayerToTeam(Long teamId, Long playerId) {
-        Optional<Team> team = teamRepository.findById(teamId);
-        if (team.isEmpty()) {
-            throw new TeamNotFoundException("Team with an id of " + teamId + " is not present in the database");
-        }
+    public Membership assignPlayerToTeam(Long teamId, Long playerId, HttpServletRequest request) {
+        Team fetchedTeam = checkTeamPresenceInTheDatabase(teamId);
+        Player fetchedPlayer = checkPlayerPresenceInTheDatabase(playerId);
 
-        Optional<Player> player = playerRepository.findById(playerId);
-        if (player.isEmpty()) {
-            throw new PlayerNotFoundException("Player with an id of " + playerId + " is not present in the database");
-        }
-
-        Team fetchedTeam = team.get();
-        Player fetchedPlayer = player.get();
+        validateTeamOwnership(fetchedTeam, request);
 
         checkTeamParticipationStatus(teamId);
         checkPlayerMembershipStatus(playerId);
@@ -76,21 +60,31 @@ public class MembershipService extends AffiliationService {
         return addPlayerToTeam(fetchedTeam, fetchedPlayer);
     }
 
+    private Player checkPlayerPresenceInTheDatabase(Long playerId) {
+        Optional<Player> player = playerRepository.findById(playerId);
+
+        if (player.isEmpty()) {
+            throw new PlayerNotFoundException("There is no player with an id " + playerId);
+        } else {
+            return player.get();
+        }
+    }
+
     private void checkPlayerMembershipStatus(Long playerId) {
         Optional<Long> latestTeamId = membershipRepository.findLatestTeamForPlayer(playerId);
 
         if (latestTeamId.isPresent()) {
             try {
-                checkLatestTeamFinishedParticipation(latestTeamId.get());
+                checkLatestTeamFinishedParticipation(playerId, latestTeamId.get());
             } catch (TeamAlreadyInTournamentException ex) {
                 throw new PlayerAlreadyInTeamException(
-                    "The player is currently registered to a team with an id of "
+                    "The player is currently assigned to a team with an id "
                         + latestTeamId.get() + " and " + ex.getMessage(), ex);
             }
         }
     }
 
-    private void checkLatestTeamFinishedParticipation(Long teamId) {
+    private void checkLatestTeamFinishedParticipation(Long playerId, Long teamId) {
         Optional<Tournament> latestTournament;
         Optional<Long> latestTournamentId = participationRepository.findLatestTournamentForTeam(teamId);
 
@@ -100,23 +94,41 @@ public class MembershipService extends AffiliationService {
             if (latestTournament.isPresent()) {
                 if (LocalDateTime.now().isBefore(latestTournament.get().getEndDate())) {
                     throw new TeamAlreadyInTournamentException(
-                        "The team is currently registered to a tournament with an id of "
-                            + latestTournament.get().getId().toString() + " which is not over yet");
+                        "The team is currently registered for a tournament with an id "
+                            + latestTournament.get().getId().toString() + " which is not over yet"
+                    );
                 } else {
+                    Optional<Long> playerInTeamAfterItsLastTournament =
+                        membershipRepository.findPlayerPresenceAfterLastTeamTournament(playerId, teamId,
+                        latestTournamentId.get());
+
+                    if (playerInTeamAfterItsLastTournament.isPresent()) {
+                        throw new PlayerAlreadyInTeamException("The player is already assigned to a team with an id "
+                            + teamId + " which will be registered for a tournament");
+                    }
                     return;
                 }
             } else {
                 throw new TournamentNotFoundException("The tournament was not found");
             }
-
         }
 
-        throw new PlayerAlreadyInTeamException("The player is already assigned to a team with an id of "
-            + teamId + " which will be registered in a tournament");
+        throw new PlayerAlreadyInTeamException("The player is already assigned to a team with an id "
+            + teamId + " which will be registered for a tournament");
     }
 
-    public Page<Membership> findAllMemberships(Pageable pageable) {
-        return membershipRepository.findAll(pageable);
+    public Set<Membership> findAllAssignedPlayers(Long teamId) {
+        Optional<Long> latestTournamentForTeam = participationRepository.findLatestTournamentForTeam(teamId);
+        checkTeamPresenceInTheDatabase(teamId);
+
+        Set<Membership> playersInATeam;
+        if (latestTournamentForTeam.isPresent()) {
+            playersInATeam = membershipRepository.findPlayersInTeam(teamId, latestTournamentForTeam.get());
+        } else {
+            playersInATeam = membershipRepository.findPlayersInTeamWhenTeamHasNotParticipatedYet(teamId);
+        }
+
+        return playersInATeam;
     }
 
 }
