@@ -15,18 +15,18 @@ import lombok.Data;
 public class TeamNotification {
 
     @EmbeddedId
-    TeamNotificationKey id;
+    private TeamNotificationKey id;
 
     @ManyToOne
     @MapsId("team")
     @JoinColumn(name = "team_id")
-    Team team;
+    private Team team;
 
     @ManyToOne
     @MapsId("user")
     @JoinColumn(name = "user_id")
-    User user;
+    private User user;
 
     @Column(name = "type")
-    NotificationType type;
+    private NotificationType type;
 }

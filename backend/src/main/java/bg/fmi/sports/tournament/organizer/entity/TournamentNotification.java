@@ -15,18 +15,18 @@ import lombok.Data;
 public class TournamentNotification {
 
     @EmbeddedId
-    TournamentNotificationKey id;
+    private TournamentNotificationKey id;
 
     @ManyToOne
     @MapsId("tournament")
     @JoinColumn(name = "tournament_id")
-    Tournament tournament;
+    private Tournament tournament;
 
     @ManyToOne
     @MapsId("user")
     @JoinColumn(name = "user_id")
-    User user;
+    private User user;
 
     @Column(name = "type")
-    NotificationType type;
+    private NotificationType type;
 }

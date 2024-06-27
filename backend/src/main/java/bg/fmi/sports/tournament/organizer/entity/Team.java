@@ -63,7 +63,7 @@ public class Team {
     private Long version;
 
     @OneToMany(mappedBy = "team")
-    Set<TeamNotification> notification;
+    private Set<TeamNotification> notification;
 
     @Override
     public boolean equals(Object o) {
