@@ -1,5 +1,6 @@
 package bg.fmi.sports.tournament.organizer.config;
 
+import bg.fmi.sports.tournament.organizer.vo.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,6 +26,9 @@ public class SecurityConfig {
         http.authorizeHttpRequests(request -> {
 //            request.anyRequest().permitAll();
             request.requestMatchers("/api/users/auth", "/api/users/register").permitAll();
+            request.requestMatchers("/api/users/*").hasAnyRole(Role.ADMIN.getName());
+            request.requestMatchers("/api/tournaments/*").hasAnyRole(Role.MANAGER.getName(), Role.ADMIN.getName());
+            request.requestMatchers("/api/teams/*").hasAnyRole(Role.ADMIN.getName(), Role.MANAGER.getName());
             request.anyRequest().authenticated();
         });
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
