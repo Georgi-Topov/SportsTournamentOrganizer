@@ -1,13 +1,12 @@
 package bg.fmi.sports.tournament.organizer.service;
 
-import bg.fmi.sports.tournament.organizer.entity.Player;
 import bg.fmi.sports.tournament.organizer.entity.SportType;
 import bg.fmi.sports.tournament.organizer.entity.Team;
 import bg.fmi.sports.tournament.organizer.exception.PlayerAlreadyInTeamException;
-import bg.fmi.sports.tournament.organizer.exception.PlayerNotFoundException;
 import bg.fmi.sports.tournament.organizer.exception.TeamAlreadyInTournamentException;
 import bg.fmi.sports.tournament.organizer.exception.TeamNotFoundException;
-import bg.fmi.sports.tournament.organizer.repository.PlayerRepository;
+import bg.fmi.sports.tournament.organizer.repository.MembershipRepository;
+import bg.fmi.sports.tournament.organizer.repository.ParticipationRepository;
 import bg.fmi.sports.tournament.organizer.repository.SportTypeRepository;
 import bg.fmi.sports.tournament.organizer.repository.TeamRepository;
 import jakarta.transaction.Transactional;
@@ -22,22 +21,19 @@ public class TeamService {
 
     private final TeamRepository teamRepository;
     private final SportTypeRepository sportTypeRepository;
-    private final PlayerRepository playerRepository;
-    private final MembershipService membershipService;
-    private final ParticipationService participationService;
+    private final MembershipRepository membershipRepository;
+    private final ParticipationRepository participationRepository;
 
     public TeamService(TeamRepository teamRepository, SportTypeRepository sportTypeRepository,
-                       PlayerRepository playerRepository, MembershipService membershipService,
-                       ParticipationService participationService) {
+                       MembershipRepository membershipRepository, ParticipationRepository participationRepository) {
         this.teamRepository = teamRepository;
         this.sportTypeRepository = sportTypeRepository;
-        this.playerRepository = playerRepository;
-        this.membershipService = membershipService;
-        this.participationService = participationService;
+        this.membershipRepository = membershipRepository;
+        this.participationRepository = participationRepository;
     }
 
     public Team createTeam(Team team) {
-        setSportTypeWithoutDuplicationForCreation(team);
+        setSportTypeWithoutDuplication(team);
         return teamRepository.save(team);
     }
 
@@ -56,20 +52,17 @@ public class TeamService {
         return teamRepository.findById(id).map(fetchedTeam -> {
             Optional.ofNullable(team.getName()).ifPresent(fetchedTeam::setName);
 
-            setSportTypeWithoutDuplicationForModification(team);
-            Optional.ofNullable(team.getSportType()).ifPresent(fetchedTeam::setSportType);
-
             // todo(maybe) : make it possible to change owning manager
             return teamRepository.save(fetchedTeam);
         }).orElseThrow(() -> new TeamNotFoundException("Team can not be found in the database"));
     }
 
     public void deleteTeamById(Long id) {
-        if (membershipService.isTeamRegistered(id)) {
+        if (isTeamHavingPlayers(id)) {
             throw new PlayerAlreadyInTeamException("There are players in the team");
         }
 
-        if (participationService.isTeamRegistered(id)) {
+        if (isTeamRegistered(id)) {
             throw new TeamAlreadyInTournamentException("The team is registered to a tournament");
         }
 
@@ -77,7 +70,7 @@ public class TeamService {
         teamRepository.deleteById(id);
     }
 
-    private void setSportTypeWithoutDuplicationForCreation(Team team) {
+    private void setSportTypeWithoutDuplication(Team team) {
         SportType teamSportType = null;
 
         if (team.getSportType() != null) {
@@ -89,29 +82,12 @@ public class TeamService {
         }
     }
 
-    private void setSportTypeWithoutDuplicationForModification(Team team) {
-        SportType teamSportType = null;
-
-        if (team.getSportType() != null) {
-            teamSportType = sportTypeRepository.findBySportType(team.getSportType().getSportType());
-        }
-
-        team.setSportType(teamSportType);
+    public boolean isTeamRegistered(Long id) {
+        return !participationRepository.findByTeamId(id).isEmpty();
     }
 
-    public void registerPlayer(Long teamId, Long playerId) {
-        Optional<Team> team = teamRepository.findById(teamId);
-        if (team.isEmpty()) {
-            throw new TeamNotFoundException("Team with an id of " + teamId + " is not present in the database");
-        }
-
-        Optional<Player> player = playerRepository.findById(playerId);
-        if (player.isEmpty()) {
-            throw new PlayerNotFoundException("Player with an id of " + playerId + " is not present in the database");
-        }
-
-        Team fetchedTeam = team.get();
-        membershipService.addPlayerToTeam(fetchedTeam, player.get());
+    public boolean isTeamHavingPlayers(Long id) {
+        return !membershipRepository.findByTeamId(id).isEmpty();
     }
 
 }

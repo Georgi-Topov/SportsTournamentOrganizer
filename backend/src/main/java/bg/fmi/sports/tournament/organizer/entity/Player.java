@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,7 +27,8 @@ import java.util.Objects;
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(name = "player")
+@Table(name = "player", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"first_name", "last_name", "birthdate"})})
 @EntityListeners(AuditingEntityListener.class)
 public class Player {
 

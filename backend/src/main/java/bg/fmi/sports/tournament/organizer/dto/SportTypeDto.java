@@ -1,5 +1,6 @@
 package bg.fmi.sports.tournament.organizer.dto;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,11 +18,8 @@ public class SportTypeDto {
 
     private Long id;
 
+    @NotNull(message = "The type of the sport cannot be missing")
     private String sportType;
-
-    private Integer minimumPlayers;
-
-    private Integer maximumPlayers;
 
     private Long version;
 

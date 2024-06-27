@@ -4,6 +4,7 @@ import bg.fmi.sports.tournament.organizer.dto.TournamentDto;
 import bg.fmi.sports.tournament.organizer.entity.Tournament;
 import bg.fmi.sports.tournament.organizer.mapper.TournamentMapper;
 import bg.fmi.sports.tournament.organizer.service.TournamentService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -29,7 +30,7 @@ public class TournamentController {
     }
 
     @PostMapping
-    public ResponseEntity<TournamentDto> createTournament(@RequestBody TournamentDto tournamentDto) {
+    public ResponseEntity<TournamentDto> createTournament(@Valid @RequestBody TournamentDto tournamentDto) {
         Tournament tournament = tournamentMapper.dtoToTournament(tournamentDto);
         Tournament savedTournament = tournamentService.createTournament(tournament);
         return new ResponseEntity<>(tournamentMapper.tournamentToDto(savedTournament), HttpStatus.CREATED);
@@ -62,11 +63,5 @@ public class TournamentController {
     }
 
     // todo(maybe) : implement an endpoint to deregister team from tournament (from participation table)
-
-    @PostMapping("/{tournamentId}/teams/{teamId}")
-    public ResponseEntity<TournamentDto> registerPlayer(@PathVariable Long tournamentId, @PathVariable Long teamId) {
-        tournamentService.registerTeam(tournamentId, teamId);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-    }
 
 }

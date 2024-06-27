@@ -51,6 +51,11 @@ public class Tournament {
 
     private String description;
 
+    private Integer minimumPlayersPerTeam;
+
+    private Integer maximumPlayersPerTeam;
+
+    // todo : add @ManyToOne relationship to the user(admin) who created the tournament
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "creator_id")
     private User creator;

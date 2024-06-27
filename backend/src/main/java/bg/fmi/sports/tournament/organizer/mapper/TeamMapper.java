@@ -4,7 +4,7 @@ import bg.fmi.sports.tournament.organizer.dto.TeamDto;
 import bg.fmi.sports.tournament.organizer.entity.Team;
 import org.mapstruct.Mapper;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = SportTypeMapper.class)
 public interface TeamMapper {
 
     Team dtoToTeam(TeamDto teamDto);

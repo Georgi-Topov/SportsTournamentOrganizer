@@ -9,7 +9,4 @@ public interface SportTypeRepository extends JpaRepository<SportType, Long> {
 
     SportType findBySportType(String name);
 
-    SportType findBySportTypeAndMinimumPlayersAndMaximumPlayers(String name,
-                                                                Integer minimumPlayers, Integer maximumPlayers);
-
 }
