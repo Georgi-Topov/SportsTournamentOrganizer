@@ -1,8 +1,8 @@
 package bg.fmi.sports.tournament.organizer.entity;
 
-import bg.fmi.sports.tournament.organizer.entity.embedded.Audit;
 import bg.fmi.sports.tournament.organizer.entity.embedded.MembershipId;
-import jakarta.persistence.Embedded;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -33,6 +33,10 @@ import java.util.Objects;
 public class Membership {
 
     @EmbeddedId
+    @AttributeOverride(name = "audit.createdDate", column = @Column(name = "created_date"))
+    @AttributeOverride(name = "audit.lastModifiedDate", column = @Column(name = "last_modified_date"))
+    @AttributeOverride(name = "audit.createdBy", column = @Column(name = "created_by"))
+    @AttributeOverride(name = "audit.lastModifiedBy", column = @Column(name = "last_modified_by"))
     private MembershipId id;
 
     @NotNull(message = "The team to have a player assigned to it cannot be unknown")
@@ -47,9 +51,6 @@ public class Membership {
     @JoinColumn(name = "player_id")
     private Player player;
 
-    @Embedded
-    private Audit audit;
-
     @Version
     private Long version;
 
@@ -58,12 +59,12 @@ public class Membership {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Membership that = (Membership) o;
-        return Objects.equals(id, that.id) && Objects.equals(audit, that.audit);
+        return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, audit);
+        return Objects.hash(id);
     }
 
 }

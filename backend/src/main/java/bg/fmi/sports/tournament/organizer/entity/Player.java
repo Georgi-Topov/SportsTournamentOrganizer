@@ -56,7 +56,7 @@ public class Player {
     private BigDecimal weight;
 
     @Embedded
-    Audit audit;
+    private Audit audit;
 
     @Version
     private Long version;

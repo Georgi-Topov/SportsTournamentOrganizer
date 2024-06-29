@@ -1,9 +1,11 @@
 package bg.fmi.sports.tournament.organizer.config;
 
+import bg.fmi.sports.tournament.organizer.auditing.ApplicationAuditAware;
 import bg.fmi.sports.tournament.organizer.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -43,4 +45,10 @@ public class ApplicationConfig {
             AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
     }
+
+    @Bean
+    public AuditorAware<Long> auditorAware() {
+        return new ApplicationAuditAware();
+    }
+
 }

@@ -4,6 +4,7 @@ import bg.fmi.sports.tournament.organizer.TestDataUtil;
 import bg.fmi.sports.tournament.organizer.entity.Participation;
 import bg.fmi.sports.tournament.organizer.entity.Team;
 import bg.fmi.sports.tournament.organizer.entity.Tournament;
+import bg.fmi.sports.tournament.organizer.entity.User;
 import bg.fmi.sports.tournament.organizer.entity.embedded.Audit;
 import bg.fmi.sports.tournament.organizer.entity.embedded.ParticipationId;
 import bg.fmi.sports.tournament.organizer.exception.TeamAlreadyInTournamentException;
@@ -15,6 +16,7 @@ import bg.fmi.sports.tournament.organizer.repository.MembershipRepository;
 import bg.fmi.sports.tournament.organizer.repository.ParticipationRepository;
 import bg.fmi.sports.tournament.organizer.repository.TeamRepository;
 import bg.fmi.sports.tournament.organizer.repository.TournamentRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -47,6 +49,12 @@ public class ParticipationServiceTest {
     @Mock
     TournamentRepository tournamentRepository;
 
+    @Mock
+    UserService userService;
+
+    @Mock
+    HttpServletRequest request;
+
     @InjectMocks
     ParticipationService participationService;
 
@@ -57,7 +65,8 @@ public class ParticipationServiceTest {
 
         when(tournamentRepository.findById(any())).thenThrow(TournamentNotFoundException.class);
 
-        assertThrows(TournamentNotFoundException.class, () -> participationService.registerTeamToTournament(tournamentId, teamId),
+        assertThrows(TournamentNotFoundException.class,
+            () -> participationService.registerTeamToTournament(tournamentId, teamId, request),
             "Tournament is not present in the database");
         verify(participationRepository, never()).save(any());
     }
@@ -72,7 +81,8 @@ public class ParticipationServiceTest {
         when(tournamentRepository.findById(any())).thenReturn(Optional.of(fetchedTournament));
         when(teamRepository.findById(any())).thenThrow(TeamNotFoundException.class);
 
-        assertThrows(TeamNotFoundException.class, () -> participationService.registerTeamToTournament(tournamentId, teamId),
+        assertThrows(TeamNotFoundException.class,
+            () -> participationService.registerTeamToTournament(tournamentId, teamId, request),
             "Team is not present in the database");
         verify(participationRepository, never()).save(any());
     }
@@ -87,11 +97,14 @@ public class ParticipationServiceTest {
         fetchedTournament.setEndDate(LocalDateTime.now().plusDays(1));
 
         Team fetchedTeam = TestDataUtil.createTeam1();
+        User userManager = TestDataUtil.createUserManager();
 
+        when(userService.getUserFromTokenInAuthorizationHeader(request)).thenReturn(userManager);
         when(tournamentRepository.findById(any())).thenReturn(Optional.of(fetchedTournament));
         when(teamRepository.findById(any())).thenReturn(Optional.of(fetchedTeam));
 
-        assertThrows(TournamentOverException.class, () -> participationService.registerTeamToTournament(tournamentId, teamId),
+        assertThrows(TournamentOverException.class,
+            () -> participationService.registerTeamToTournament(tournamentId, teamId, request),
             "Cannot register a team to a tournament which is in progress");
         verify(participationRepository, never()).save(any());
     }
@@ -106,12 +119,14 @@ public class ParticipationServiceTest {
         fetchedTournament.setEndDate(LocalDateTime.now().plusDays(30));
 
         Team fetchedTeam = TestDataUtil.createTeam1();
+        User userManager = TestDataUtil.createUserManager();
 
+        when(userService.getUserFromTokenInAuthorizationHeader(request)).thenReturn(userManager);
         when(tournamentRepository.findById(any())).thenReturn(Optional.of(fetchedTournament));
         when(teamRepository.findById(any())).thenReturn(Optional.of(fetchedTeam));
 
         assertThrows(TeamToTournamentBadCorrespondenceException.class,
-            () -> participationService.registerTeamToTournament(tournamentId, teamId),
+            () -> participationService.registerTeamToTournament(tournamentId, teamId, request),
             "Cannot register a team to a tournament which has different sport type");
         verify(participationRepository, never()).save(any());
     }
@@ -128,7 +143,9 @@ public class ParticipationServiceTest {
         fetchedTournament.setMinimumPlayersPerTeam(2);
 
         Team fetchedTeam = TestDataUtil.createTeam1();
+        User userManager = TestDataUtil.createUserManager();
 
+        when(userService.getUserFromTokenInAuthorizationHeader(request)).thenReturn(userManager);
         when(tournamentRepository.findById(any())).thenReturn(Optional.of(fetchedTournament));
         when(teamRepository.findById(any())).thenReturn(Optional.of(fetchedTeam));
         when(participationRepository.findLatestTournamentForTeam(teamId)).thenReturn(Optional.of(latestTournamentId));
@@ -136,7 +153,7 @@ public class ParticipationServiceTest {
             .thenReturn(Optional.ofNullable(TestDataUtil.createTournament2Football()));
 
         assertThrows(TeamAlreadyInTournamentException.class,
-            () -> participationService.registerTeamToTournament(tournamentId, teamId),
+            () -> participationService.registerTeamToTournament(tournamentId, teamId, request),
             "Team is registered to a tournament which is active");
 
         verify(participationRepository, never()).save(any());
@@ -153,7 +170,9 @@ public class ParticipationServiceTest {
         fetchedTournament.setMinimumPlayersPerTeam(2);
 
         Team fetchedTeam = TestDataUtil.createTeam1();
+        User userManager = TestDataUtil.createUserManager();
 
+        when(userService.getUserFromTokenInAuthorizationHeader(request)).thenReturn(userManager);
         when(tournamentRepository.findById(any())).thenReturn(Optional.of(fetchedTournament));
         when(teamRepository.findById(any())).thenReturn(Optional.of(fetchedTeam));
         when(participationRepository.findLatestTournamentForTeam(teamId))
@@ -163,7 +182,7 @@ public class ParticipationServiceTest {
             .thenReturn(Set.of(TestDataUtil.createPlayer1().getId()));
 
         assertThrows(TeamToTournamentBadCorrespondenceException.class,
-            () -> participationService.registerTeamToTournament(tournamentId, teamId),
+            () -> participationService.registerTeamToTournament(tournamentId, teamId, request),
             "Cannot register a team to a tournament when the team does not have enough players in it");
 
         verify(participationRepository, never()).save(any());
@@ -180,7 +199,9 @@ public class ParticipationServiceTest {
         fetchedTournament.setMinimumPlayersPerTeam(2);
 
         Team fetchedTeam = TestDataUtil.createTeam1();
+        User userManager = TestDataUtil.createUserManager();
 
+        when(userService.getUserFromTokenInAuthorizationHeader(request)).thenReturn(userManager);
         when(tournamentRepository.findById(tournamentId)).thenReturn(Optional.of(fetchedTournament));
         when(teamRepository.findById(teamId)).thenReturn(Optional.of(fetchedTeam));
         when(participationRepository.findLatestTournamentForTeam(teamId))
@@ -189,7 +210,7 @@ public class ParticipationServiceTest {
             .thenReturn(Set.of(TestDataUtil.createPlayer1().getId(), TestDataUtil.createPlayer2().getId()));
         when(participationRepository.existsById(any())).thenReturn(false);
 
-        participationService.registerTeamToTournament(tournamentId, teamId);
+        participationService.registerTeamToTournament(tournamentId, teamId, request);
 
         verify(participationRepository, times(1))
             .save(Participation.builder()

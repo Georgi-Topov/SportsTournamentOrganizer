@@ -1,10 +1,13 @@
 package bg.fmi.sports.tournament.organizer.controller;
 
 import bg.fmi.sports.tournament.organizer.dto.ParticipationDto;
+import bg.fmi.sports.tournament.organizer.dto.ParticipationPartialResponseDto;
 import bg.fmi.sports.tournament.organizer.entity.Participation;
 import bg.fmi.sports.tournament.organizer.mapper.ParticipationMapper;
 import bg.fmi.sports.tournament.organizer.service.AffiliationService;
 import bg.fmi.sports.tournament.organizer.service.ParticipationService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,20 +34,22 @@ public class ParticipationController {
     }
 
     @PostMapping("/{teamId}")
-    public ResponseEntity<ParticipationDto> registerTeamToTournament(
+    public ResponseEntity<ParticipationDto> registerTeamToTournament(@NotNull HttpServletRequest request,
         @PathVariable Long tournamentId, @PathVariable Long teamId
     ) {
         Participation savedParticipation =
-            ((ParticipationService)participationService).registerTeamToTournament(tournamentId, teamId);
+            ((ParticipationService)participationService).registerTeamToTournament(tournamentId, teamId, request);
         return new ResponseEntity<>(participationMapper.participationToDto(savedParticipation), HttpStatus.CREATED);
     }
 
     @GetMapping
-    public ResponseEntity<Set<ParticipationDto>> findAllParticipatingTeams(@PathVariable Long tournamentId) {
+    public ResponseEntity<Set<ParticipationPartialResponseDto>> findAllParticipatingTeams(
+        @PathVariable Long tournamentId) {
         Set<Participation> fetchedTeams =
             ((ParticipationService)participationService).findAllParticipatingTeams(tournamentId);
 
-        Set<ParticipationDto> fetchedDtoTeams = fetchedTeams.stream().map(participationMapper::participationToDto)
+        Set<ParticipationPartialResponseDto> fetchedDtoTeams = fetchedTeams.stream()
+            .map(participationMapper::participationToPartialResponseDto)
             .collect(Collectors.toSet());
 
         return new ResponseEntity<>(fetchedDtoTeams, HttpStatus.OK);

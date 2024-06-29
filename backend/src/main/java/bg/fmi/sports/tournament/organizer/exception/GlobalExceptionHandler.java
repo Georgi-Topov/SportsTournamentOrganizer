@@ -45,7 +45,7 @@ public class GlobalExceptionHandler {
 
     // TODO: use ErrorResponse
     @ExceptionHandler({ PlayerNotFoundException.class, TeamNotFoundException.class,
-            TournamentNotFoundException.class })
+        TournamentNotFoundException.class })
     public ResponseEntity<String> notFoundTuple(EntityNotFoundException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
@@ -87,6 +87,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MissingSportTypeException.class)
     public ResponseEntity<String> missingSportType(MissingSportTypeException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(UserNotAuthorizedException.class)
+    public ResponseEntity<String> notAuthorized(UserNotAuthorizedException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.UNAUTHORIZED);
     }
 
 }

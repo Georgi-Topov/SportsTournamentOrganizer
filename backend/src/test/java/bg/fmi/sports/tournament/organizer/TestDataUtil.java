@@ -4,11 +4,12 @@ import bg.fmi.sports.tournament.organizer.entity.Player;
 import bg.fmi.sports.tournament.organizer.entity.SportType;
 import bg.fmi.sports.tournament.organizer.entity.Team;
 import bg.fmi.sports.tournament.organizer.entity.Tournament;
+import bg.fmi.sports.tournament.organizer.entity.User;
 import bg.fmi.sports.tournament.organizer.entity.embedded.Audit;
+import bg.fmi.sports.tournament.organizer.vo.Role;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-
 
 public class TestDataUtil {
     private TestDataUtil() {
@@ -20,6 +21,7 @@ public class TestDataUtil {
             .firstName("Kylian")
             .lastName("Mbappe")
             .birthdate(LocalDate.of(1997, 4, 14))
+            .audit(creationAudit())
             .build();
     }
 
@@ -29,13 +31,29 @@ public class TestDataUtil {
             .firstName("Lamine")
             .lastName("Yamal")
             .birthdate(LocalDate.of(2007, 4, 14))
+            .audit(creationAudit())
             .build();
     }
 
     public static Audit creationAudit() {
         return Audit.builder()
             .createdDate(LocalDateTime.of(2024, 6, 20, 12, 0, 0))
+            .createdBy(1L)
             .build();
+    }
+
+    public static User createUserManager() {
+        User user = new User();
+        user.setId(1L);
+        user.setRole(Role.MANAGER);
+        return user;
+    }
+
+    public static User createUserAdmin() {
+        User user = new User();
+        user.setId(1L);
+        user.setRole(Role.ADMIN);
+        return user;
     }
 
     public static Team createTeam1() {
@@ -43,6 +61,7 @@ public class TestDataUtil {
             .id(1L)
             .name("Barcelona")
             .sportType(createSportType1Football())
+            .audit(creationAudit())
             .build();
     }
 
@@ -51,6 +70,7 @@ public class TestDataUtil {
             .id(2L)
             .name("Real Madrid")
             .sportType(createSportType1Football())
+            .audit(creationAudit())
             .build();
     }
 
@@ -59,6 +79,7 @@ public class TestDataUtil {
             .id(3L)
             .name("Germany")
             .sportType(createSportType1Football())
+            .audit(creationAudit())
             .build();
     }
 
@@ -67,6 +88,7 @@ public class TestDataUtil {
             .id(4L)
             .name("France")
             .sportType(createSportType1Football())
+            .audit(creationAudit())
             .build();
     }
 
@@ -79,6 +101,7 @@ public class TestDataUtil {
             .endDate(LocalDateTime.of(2024, 8, 5, 16, 0, 0))
             .description("Tournament")
             .minimumPlayersPerTeam(11)
+            .audit(creationAudit())
             .build();
     }
 
@@ -91,6 +114,7 @@ public class TestDataUtil {
             .endDate(LocalDateTime.of(2024, 8, 6, 16, 0, 0))
             .description("Tournament")
             .minimumPlayersPerTeam(11)
+            .audit(creationAudit())
             .build();
     }
 
@@ -103,6 +127,7 @@ public class TestDataUtil {
             .endDate(LocalDateTime.of(2024, 8, 5, 16, 0, 0))
             .description("Tournament")
             .minimumPlayersPerTeam(1)
+            .audit(creationAudit())
             .build();
     }
 
@@ -115,6 +140,7 @@ public class TestDataUtil {
             .endDate(LocalDateTime.of(2024, 6, 5, 16, 0, 0))
             .description("Tournament")
             .minimumPlayersPerTeam(1)
+            .audit(creationAudit())
             .build();
     }
 
@@ -127,6 +153,7 @@ public class TestDataUtil {
             .endDate(LocalDateTime.of(2023, 6, 5, 16, 0, 0))
             .description("Tournament")
             .minimumPlayersPerTeam(1)
+            .audit(creationAudit())
             .build();
     }
 

@@ -1,7 +1,8 @@
 package bg.fmi.sports.tournament.organizer.dto;
 
+import bg.fmi.sports.tournament.organizer.entity.embedded.Audit;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.validation.constraints.AssertTrue;
+import jakarta.persistence.Embedded;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 import lombok.AllArgsConstructor;
@@ -42,20 +43,10 @@ public class TournamentDto {
     @NotNull(message = "The minimum number of players of a participating team cannot be null")
     private Integer minimumPlayersPerTeam;
 
-    private Integer maximumPlayersPerTeam;
-
-    // todo : add @ManyToOne relationship to the user(admin) who created the tournament
-
-    private LocalDateTime createdDate;
-
-    private LocalDateTime lastModifiedDate;
+    @Embedded
+    private Audit audit;
 
     private Long version;
-
-    @AssertTrue(message = "The start date must be before the end date")
-    public boolean isStartDateBeforeEndDate() {
-        return startDate.isBefore(endDate);
-    }
 
     @Override
     public boolean equals(Object o) {

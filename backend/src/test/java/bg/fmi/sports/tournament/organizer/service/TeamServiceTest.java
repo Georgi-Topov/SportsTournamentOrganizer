@@ -6,6 +6,7 @@ import bg.fmi.sports.tournament.organizer.entity.Participation;
 import bg.fmi.sports.tournament.organizer.entity.Player;
 import bg.fmi.sports.tournament.organizer.entity.Team;
 import bg.fmi.sports.tournament.organizer.entity.Tournament;
+import bg.fmi.sports.tournament.organizer.entity.User;
 import bg.fmi.sports.tournament.organizer.exception.MissingSportTypeException;
 import bg.fmi.sports.tournament.organizer.exception.PlayerAlreadyInTeamException;
 import bg.fmi.sports.tournament.organizer.exception.TeamAlreadyInTournamentException;
@@ -14,6 +15,7 @@ import bg.fmi.sports.tournament.organizer.repository.MembershipRepository;
 import bg.fmi.sports.tournament.organizer.repository.ParticipationRepository;
 import bg.fmi.sports.tournament.organizer.repository.SportTypeRepository;
 import bg.fmi.sports.tournament.organizer.repository.TeamRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -51,15 +53,25 @@ public class TeamServiceTest {
     @Mock
     SportTypeRepository sportTypeRepository;
 
+    @Mock
+    UserService userService;
+
+    @Mock
+    HttpServletRequest request;
+
     @InjectMocks
     TeamService teamService;
 
     @Test
     void testCreateTeamWhenSportTypeIsNotSpecified() {
         Team teamWithoutSportType = TestDataUtil.createTeam1();
+        User userManager = TestDataUtil.createUserManager();
+
+        when(userService.getUserFromTokenInAuthorizationHeader(request)).thenReturn(userManager);
         teamWithoutSportType.setSportType(TestDataUtil.createInvalidSportType());
 
-        assertThrows(MissingSportTypeException.class, () -> teamService.createTeam(teamWithoutSportType),
+        assertThrows(MissingSportTypeException.class,
+            () -> teamService.createTeam(teamWithoutSportType, request),
             "Team with missing sport type cannot be created");
         verify(teamRepository, never()).save(any());
     }
@@ -67,11 +79,14 @@ public class TeamServiceTest {
     @Test
     void testCreateTeamWhenSportTypeIsSpecified() {
         Team expectedTeamWithSportType = TestDataUtil.createTeam2();
+        expectedTeamWithSportType.setAudit(TestDataUtil.creationAudit());
+        User userManager = TestDataUtil.createUserManager();
 
+        when(userService.getUserFromTokenInAuthorizationHeader(request)).thenReturn(userManager);
         when(sportTypeRepository.findBySportType("football")).thenReturn(TestDataUtil.createSportType1Football());
         when(teamRepository.save(expectedTeamWithSportType)).thenReturn(expectedTeamWithSportType);
 
-        Team actualTeamWithSportType = teamService.createTeam(TestDataUtil.createTeam2());
+        Team actualTeamWithSportType = teamService.createTeam(expectedTeamWithSportType, request);
 
         assertEquals(expectedTeamWithSportType, actualTeamWithSportType, "Team has a sport type which is" +
             "already present in the database");
@@ -117,7 +132,8 @@ public class TeamServiceTest {
 
         when(teamRepository.findById(teamId)).thenReturn(Optional.empty());
 
-        assertThrows(TeamNotFoundException.class, () -> teamService.partiallyUpdateTeamById(teamId, team),
+        assertThrows(TeamNotFoundException.class,
+            () -> teamService.partiallyUpdateTeamById(teamId, team, request),
             "The team does not exist");
 
         verify(teamRepository, times(1)).findById(teamId);
@@ -128,12 +144,14 @@ public class TeamServiceTest {
         Long teamId = 4L;
         Team givenTeam = TestDataUtil.createTeam3();
         Team expectedTeam = TestDataUtil.createTeam4();
+        User userManager = TestDataUtil.createUserManager();
 
         when(teamRepository.findById(teamId)).thenReturn(Optional.of(expectedTeam));
+        when(userService.getUserFromTokenInAuthorizationHeader(request)).thenReturn(userManager);
         Optional.ofNullable(givenTeam.getName()).ifPresent(expectedTeam::setName);
         when(teamRepository.save(expectedTeam)).thenReturn(expectedTeam);
 
-        Team actualTeam = teamService.partiallyUpdateTeamById(teamId, givenTeam);
+        Team actualTeam = teamService.partiallyUpdateTeamById(teamId, givenTeam, request);
 
         assertEquals(expectedTeam, actualTeam, "The team is not updated successfully");
 
@@ -146,11 +164,15 @@ public class TeamServiceTest {
         Long teamId = 2L;
         Team teamToBeDeleted = TestDataUtil.createTeam2();
         Tournament tournament = TestDataUtil.createTournament1Football();
+        User userManager = TestDataUtil.createUserManager();
 
+        when(userService.getUserFromTokenInAuthorizationHeader(request)).thenReturn(userManager);
+        when(teamRepository.findById(teamId)).thenReturn(Optional.of(teamToBeDeleted));
         when(participationRepository.findByTeamId(teamId)).
             thenReturn(Set.of(Participation.builder().team(teamToBeDeleted).tournament(tournament).build()));
 
-        assertThrows(TeamAlreadyInTournamentException.class, () -> teamService.deleteTeamById(teamId),
+        assertThrows(TeamAlreadyInTournamentException.class,
+            () -> teamService.deleteTeamById(teamId, request),
             "Registered to a tournament team cannot be deleted");
 
         verify(participationRepository, times(1)).findByTeamId(teamId);
@@ -162,11 +184,15 @@ public class TeamServiceTest {
         Long teamId = 2L;
         Team teamToBeDeleted = TestDataUtil.createTeam2();
         Player player = TestDataUtil.createPlayer1();
+        User userManager = TestDataUtil.createUserManager();
 
+        when(userService.getUserFromTokenInAuthorizationHeader(request)).thenReturn(userManager);
+        when(teamRepository.findById(teamId)).thenReturn(Optional.of(teamToBeDeleted));
         when(membershipRepository.findByTeamId(teamId))
             .thenReturn(Set.of(Membership.builder().team(teamToBeDeleted).player(player).build()));
 
-        assertThrows(PlayerAlreadyInTeamException.class, () -> teamService.deleteTeamById(teamId),
+        assertThrows(PlayerAlreadyInTeamException.class,
+            () -> teamService.deleteTeamById(teamId, request),
             "Team having players assigned to it cannot be deleted");
 
         verify(membershipRepository, times(1)).findByTeamId(teamId);
@@ -176,19 +202,21 @@ public class TeamServiceTest {
     @Test
     void testDeleteTeamByIdWhenPlayerIsNotAssignedToTeamAndTeamIsNotRegisteredToTournament() {
         Long teamId = 1L;
+        Team teamToBeDeleted = TestDataUtil.createTeam1();
         Set<Membership> noMemberships = Set.of();
         Set<Participation> noParticipations = Set.of();
+        User userManager = TestDataUtil.createUserManager();
 
+        when(userService.getUserFromTokenInAuthorizationHeader(request)).thenReturn(userManager);
+        when(teamRepository.findById(teamId)).thenReturn(Optional.of(teamToBeDeleted));
         when(membershipRepository.findByTeamId(teamId)).thenReturn(noMemberships);
         when(participationRepository.findByTeamId(teamId)).thenReturn(noParticipations);
 
-        teamService.deleteTeamById(teamId);
+        teamService.deleteTeamById(teamId, request);
 
         verify(membershipRepository, times(1)).findByTeamId(teamId);
         verify(participationRepository, times(1)).findByTeamId(teamId);
         verify(teamRepository, times(1)).deleteById(teamId);
     }
-
-
 
 }

@@ -4,11 +4,13 @@ import bg.fmi.sports.tournament.organizer.TestDataUtil;
 import bg.fmi.sports.tournament.organizer.entity.Membership;
 import bg.fmi.sports.tournament.organizer.entity.Player;
 import bg.fmi.sports.tournament.organizer.entity.Team;
+import bg.fmi.sports.tournament.organizer.entity.User;
 import bg.fmi.sports.tournament.organizer.exception.PlayerAlreadyInTeamException;
 import bg.fmi.sports.tournament.organizer.exception.PlayerDuplicationException;
 import bg.fmi.sports.tournament.organizer.exception.PlayerNotFoundException;
 import bg.fmi.sports.tournament.organizer.repository.MembershipRepository;
 import bg.fmi.sports.tournament.organizer.repository.PlayerRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -41,17 +43,24 @@ public class PlayerServiceTest {
     @Mock
     MembershipRepository membershipRepository;
 
+    @Mock
+    UserService userService;
+
+    @Mock
+    HttpServletRequest request;
+
     @InjectMocks
     PlayerService playerService;
 
     @Test
     void testCreatePlayerWhenPlayerIsNotDuplicated() {
         Player expectedPlayer = TestDataUtil.createPlayer1();
-        expectedPlayer.setAudit(TestDataUtil.creationAudit());
+        User userManager = TestDataUtil.createUserManager();
 
+        when(userService.getUserFromTokenInAuthorizationHeader(request)).thenReturn(userManager);
         when(playerRepository.save(expectedPlayer)).thenReturn(expectedPlayer);
 
-        Player actualPlayer = playerService.createPlayer(expectedPlayer);
+        Player actualPlayer = playerService.createPlayer(expectedPlayer, request);
 
         assertEquals(expectedPlayer, actualPlayer,
             "The player which is persisted in the database should be returned");
@@ -62,11 +71,13 @@ public class PlayerServiceTest {
     @Test
     void testCreatePlayerWhenPlayerIsDuplicated() {
         Player expectedPlayer = TestDataUtil.createPlayer1();
-        expectedPlayer.setAudit(TestDataUtil.creationAudit());
+        User userManager = TestDataUtil.createUserManager();
 
+        when(userService.getUserFromTokenInAuthorizationHeader(request)).thenReturn(userManager);
         when(playerRepository.save(expectedPlayer)).thenThrow(DataIntegrityViolationException.class);
 
-        assertThrows(PlayerDuplicationException.class, () -> playerService.createPlayer(expectedPlayer),
+        assertThrows(PlayerDuplicationException.class,
+            () -> playerService.createPlayer(expectedPlayer, request),
             "Player with the provided first name, last name and birthdate already exists");
 
         verify(playerRepository, times(1)).save(expectedPlayer);
@@ -93,7 +104,6 @@ public class PlayerServiceTest {
         Player expectedPlayer = TestDataUtil.createPlayer1();
 
         when(playerRepository.findById(playerId)).thenReturn(Optional.of(expectedPlayer));
-
         Optional<Player> actualPlayer = playerService.findPlayerById(playerId);
 
         assertEquals(expectedPlayer, actualPlayer.get(),
@@ -106,10 +116,14 @@ public class PlayerServiceTest {
     void testPartiallyUpdatePlayerByIdWhenPlayerDoesNotExist() {
         Long playerId = 1L;
         Player player = TestDataUtil.createPlayer2();
+        User userManager = TestDataUtil.createUserManager();
 
+        when(userService.getUserFromTokenInAuthorizationHeader(request)).thenReturn(userManager);
+        when(membershipRepository.findLatestTeamForPlayer(playerId)).thenReturn(Optional.empty());
         when(playerRepository.findById(playerId)).thenReturn(Optional.empty());
 
-        assertThrows(PlayerNotFoundException.class, () -> playerService.partiallyUpdatePlayerById(playerId, player),
+        assertThrows(PlayerNotFoundException.class,
+            () -> playerService.partiallyUpdatePlayerById(playerId, player, request),
             "The player does not exist");
 
         verify(playerRepository, times(1)).findById(playerId);
@@ -120,6 +134,10 @@ public class PlayerServiceTest {
         Long playerId = 2L;
         Player givenPlayer = TestDataUtil.createPlayer1();
         Player expectedPlayer = TestDataUtil.createPlayer2();
+        User userManager = TestDataUtil.createUserManager();
+
+        when(userService.getUserFromTokenInAuthorizationHeader(request)).thenReturn(userManager);
+        when(membershipRepository.findLatestTeamForPlayer(playerId)).thenReturn(Optional.empty());
 
         when(playerRepository.findById(playerId)).thenReturn(Optional.of(expectedPlayer));
         Optional.ofNullable(givenPlayer.getFirstName()).ifPresent(expectedPlayer::setFirstName);
@@ -129,7 +147,7 @@ public class PlayerServiceTest {
         Optional.ofNullable(givenPlayer.getWeight()).ifPresent(expectedPlayer::setWeight);
         when(playerRepository.save(expectedPlayer)).thenReturn(expectedPlayer);
 
-        Player actualPlayer = playerService.partiallyUpdatePlayerById(playerId, givenPlayer);
+        Player actualPlayer = playerService.partiallyUpdatePlayerById(playerId, givenPlayer, request);
 
         assertEquals(expectedPlayer, actualPlayer, "The player is not updated successfully");
 
@@ -142,11 +160,14 @@ public class PlayerServiceTest {
         Long playerId = 1L;
         Player playerToBeDeleted = TestDataUtil.createPlayer1();
         Team team = TestDataUtil.createTeam1();
+        User userManager = TestDataUtil.createUserManager();
 
+        when(userService.getUserFromTokenInAuthorizationHeader(request)).thenReturn(userManager);
         when(membershipRepository.findByPlayerId(playerId)).
             thenReturn(Set.of(Membership.builder().player(playerToBeDeleted).team(team).build()));
 
-        assertThrows(PlayerAlreadyInTeamException.class, () -> playerService.deletePlayerById(playerId),
+        assertThrows(PlayerAlreadyInTeamException.class,
+            () -> playerService.deletePlayerById(playerId, request),
             "Assigned to a team player cannot be deleted");
 
         verify(membershipRepository, times(1)).findByPlayerId(playerId);
@@ -157,10 +178,12 @@ public class PlayerServiceTest {
     void testDeletePlayerByIdWhenPlayerIsNotAssignedToTeam() {
         Long playerId = 1L;
         Set<Membership> noMemberships = Set.of();
+        User userManager = TestDataUtil.createUserManager();
 
+        when(userService.getUserFromTokenInAuthorizationHeader(request)).thenReturn(userManager);
         when(membershipRepository.findByPlayerId(playerId)).thenReturn(noMemberships);
 
-        playerService.deletePlayerById(playerId);
+        playerService.deletePlayerById(playerId, request);
 
         verify(membershipRepository, times(1)).findByPlayerId(playerId);
         verify(playerRepository, times(1)).deleteById(playerId);

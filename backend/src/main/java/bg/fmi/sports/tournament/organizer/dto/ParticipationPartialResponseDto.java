@@ -1,8 +1,5 @@
 package bg.fmi.sports.tournament.organizer.dto;
 
-import bg.fmi.sports.tournament.organizer.entity.embedded.Audit;
-import bg.fmi.sports.tournament.organizer.entity.embedded.ParticipationId;
-import jakarta.persistence.Embedded;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,32 +14,25 @@ import java.util.Objects;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ParticipationDto {
-
-    private ParticipationId id;
+public class ParticipationPartialResponseDto {
 
     @NotNull(message = "The tournament to have a team registered for it cannot be null")
-    private TournamentDto tournament;
+    private TournamentPartialResponseDto tournament;
 
     @NotNull(message = "Registered team cannot be null")
-    private TeamDto team;
-
-    @Embedded
-    private Audit audit;
-
-    private Long version;
+    private TeamPartialResponseDto team;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ParticipationDto that = (ParticipationDto) o;
-        return Objects.equals(id, that.id);
+        ParticipationPartialResponseDto that = (ParticipationPartialResponseDto) o;
+        return Objects.equals(tournament, that.tournament) && Objects.equals(team, that.team);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        return Objects.hash(tournament, team);
     }
 
 }

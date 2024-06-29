@@ -4,13 +4,18 @@ import bg.fmi.sports.tournament.organizer.entity.Participation;
 import bg.fmi.sports.tournament.organizer.entity.SportType;
 import bg.fmi.sports.tournament.organizer.entity.Team;
 import bg.fmi.sports.tournament.organizer.entity.Tournament;
+import bg.fmi.sports.tournament.organizer.entity.User;
+import bg.fmi.sports.tournament.organizer.entity.embedded.Audit;
 import bg.fmi.sports.tournament.organizer.exception.InvalidStartEndDateForTournamentException;
 import bg.fmi.sports.tournament.organizer.exception.MissingSportTypeException;
+import bg.fmi.sports.tournament.organizer.exception.TeamAlreadyInTournamentException;
 import bg.fmi.sports.tournament.organizer.exception.TournamentNotFoundException;
 import bg.fmi.sports.tournament.organizer.exception.TournamentOverException;
 import bg.fmi.sports.tournament.organizer.repository.ParticipationRepository;
 import bg.fmi.sports.tournament.organizer.repository.SportTypeRepository;
 import bg.fmi.sports.tournament.organizer.repository.TournamentRepository;
+import bg.fmi.sports.tournament.organizer.vo.Role;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,24 +27,38 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
+@Log
 public class TournamentService {
 
+    private final UserService userService;
     private final TournamentRepository tournamentRepository;
     private final SportTypeRepository sportTypeRepository;
-
     private final ParticipationRepository participationRepository;
 
-    public TournamentService(TournamentRepository tournamentRepository,
-                             SportTypeRepository sportTypeRepository,
+    public TournamentService(UserService userService,
+                             TournamentRepository tournamentRepository, SportTypeRepository sportTypeRepository,
                              ParticipationRepository participationRepository) {
+        this.userService = userService;
         this.tournamentRepository = tournamentRepository;
         this.sportTypeRepository = sportTypeRepository;
         this.participationRepository = participationRepository;
     }
 
-    public Tournament createTournament(Tournament tournament) {
-        setSportTypeWithoutDuplication(tournament);
-        return tournamentRepository.save(tournament);
+    public Tournament createTournament(Tournament tournament, HttpServletRequest request) {
+        User currentUser = userService.getUserFromTokenInAuthorizationHeader(request);
+        if (currentUser.getRole() != Role.ADMIN) {
+            throw new UserNotAuthorizedException("Only a user with an admin role can create a tournament");
+        }
+
+        tournament.setAudit(Audit.builder().build());
+        Tournament savedTournament = tournamentRepository.save(tournament);
+        savedTournament.setAudit(Audit.builder()
+            .createdDate(savedTournament.getAudit().getCreatedDate())
+            .createdBy(savedTournament.getAudit().getCreatedBy())
+            .lastModifiedDate(null)
+            .lastModifiedBy(null)
+            .build());
+        return savedTournament;
     }
 
     public Set<Team> getAllTeams(Long id) {
@@ -57,10 +76,15 @@ public class TournamentService {
     }
 
     @Transactional
-    public Tournament partiallyUpdateTournamentById(Long id, Tournament tournament) {
+    public Tournament partiallyUpdateTournamentById(Long id, Tournament tournament, HttpServletRequest request) {
         tournament.setId(id);
 
         return tournamentRepository.findById(id).map(fetchedTournament -> {
+            User currentUser = userService.getUserFromTokenInAuthorizationHeader(request);
+            if (currentUser.getRole() != Role.ADMIN) {
+                throw new UserNotAuthorizedException("Only a user with an admin role can update the tournament");
+            }
+
             Optional.ofNullable(tournament.getName()).ifPresent(fetchedTournament::setName);
 
             checkTournamentDates(tournament, fetchedTournament);
@@ -69,12 +93,33 @@ public class TournamentService {
 
             Optional.ofNullable(tournament.getDescription()).ifPresent(fetchedTournament::setDescription);
             Optional.ofNullable(tournament.getMinimumPlayersPerTeam())
-                    .ifPresent(fetchedTournament::setMinimumPlayersPerTeam);
-            Optional.ofNullable(tournament.getMaximumPlayersPerTeam())
-                    .ifPresent(fetchedTournament::setMaximumPlayersPerTeam);
+                .ifPresent(fetchedTournament::setMinimumPlayersPerTeam);
 
             return tournamentRepository.save(fetchedTournament);
-        }).orElseThrow(() -> new TournamentNotFoundException("Tournament can not be found in the database"));
+        }).orElseThrow(() -> new TournamentNotFoundException("There is no tournament with the provided id"));
+    }
+
+    public void deleteTournamentById(Long id, HttpServletRequest request) {
+        Tournament tournament = tournamentRepository.findById(id).map(fetchedTournament -> {
+            User currentUser = userService.getUserFromTokenInAuthorizationHeader(request);
+
+            if (!currentUser.getId().equals(fetchedTournament.getAudit().getCreatedBy())) {
+                throw new UserNotAuthorizedException("Only the admin who created the tournament can delete it");
+            }
+
+            return fetchedTournament;
+        }).orElseThrow(() -> new TournamentNotFoundException("There is no tournament with the provided id"));
+
+        if (isTournamentHavingTeams(id)) {
+            throw new TeamAlreadyInTournamentException("There are teams in the tournament");
+        }
+
+        tournament.setSportType(null);
+        tournamentRepository.deleteById(id);
+    }
+
+    private boolean isTournamentHavingTeams(Long id) {
+        return !participationRepository.findByTournamentId(id).isEmpty();
     }
 
     private void setSportTypeWithoutDuplication(Tournament tournament) {
@@ -82,7 +127,7 @@ public class TournamentService {
 
         if (tournament.getSportType() != null) {
             if (tournament.getSportType().getSportType() == null
-                    || tournament.getSportType().getSportType().isBlank()) {
+                || tournament.getSportType().getSportType().isBlank()) {
                 throw new MissingSportTypeException("Cannot create a tournament without a sport type");
             }
             tournamentSportType = sportTypeRepository.findBySportType(tournament.getSportType().getSportType());
@@ -147,5 +192,4 @@ public class TournamentService {
             }
         }
 
-    }
 }
