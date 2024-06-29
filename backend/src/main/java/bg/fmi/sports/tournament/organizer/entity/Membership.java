@@ -12,12 +12,15 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -32,11 +35,13 @@ public class Membership {
     @EmbeddedId
     private MembershipId id;
 
+    @NotNull(message = "The team to have a player assigned to it cannot be unknown")
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("teamId")
     @JoinColumn(name = "team_id")
     private Team team;
 
+    @NotNull(message = "Assigned player cannot be unknown")
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("playerId")
     @JoinColumn(name = "player_id")
@@ -47,5 +52,18 @@ public class Membership {
 
     @Version
     private Long version;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Membership that = (Membership) o;
+        return Objects.equals(id, that.id) && Objects.equals(audit, that.audit);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, audit);
+    }
 
 }

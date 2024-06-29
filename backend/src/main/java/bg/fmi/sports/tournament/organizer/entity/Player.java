@@ -10,6 +10,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Version;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -36,14 +39,20 @@ public class Player {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @NotNull(message = "Player's first name cannot be null")
+    @NotBlank(message = "Player's first name must have at least 1 non-white space character")
     private String firstName;
 
+    @NotNull(message = "Player's last name cannot be null")
+    @NotBlank(message = "Player's last name must have at least 1 non-white space character")
     private String lastName;
 
+    @NotNull(message = "Player's birthdate cannot be null")
     private LocalDate birthdate;
 
     private String gender;
 
+    @Min(value = 1, message = "Players must have positive weight")
     private BigDecimal weight;
 
     @Embedded

@@ -1,7 +1,6 @@
 package bg.fmi.sports.tournament.organizer.controller;
 
 import bg.fmi.sports.tournament.organizer.dto.MembershipDto;
-import bg.fmi.sports.tournament.organizer.dto.ParticipationDto;
 import bg.fmi.sports.tournament.organizer.entity.Membership;
 import bg.fmi.sports.tournament.organizer.mapper.MembershipMapper;
 import bg.fmi.sports.tournament.organizer.service.AffiliationService;
@@ -31,11 +30,11 @@ public class MembershipController {
     }
 
     @PostMapping("/{teamId}/players/{playerId}")
-    public ResponseEntity<ParticipationDto> assignPlayerToTeam(
+    public ResponseEntity<MembershipDto> assignPlayerToTeam(
         @PathVariable Long teamId, @PathVariable Long playerId
     ) {
-        ((MembershipService)membershipService).assignPlayerToTeam(teamId, playerId);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        Membership savedMembership = ((MembershipService)membershipService).assignPlayerToTeam(teamId, playerId);
+        return new ResponseEntity<>(membershipMapper.membershipToDto(savedMembership), HttpStatus.CREATED);
     }
 
     @GetMapping("/players")

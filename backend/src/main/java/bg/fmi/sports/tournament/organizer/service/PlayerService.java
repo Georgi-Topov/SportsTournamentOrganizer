@@ -30,7 +30,12 @@ public class PlayerService {
         player.setAudit(new Audit());
 
         try {
-            return playerRepository.save(player);
+            Player savedPlayer = playerRepository.save(player);
+            Audit audit = savedPlayer.getAudit();
+            audit.setLastModifiedDate(null);
+            audit.setLastModifiedBy(null);
+            savedPlayer.setAudit(audit);
+            return savedPlayer;
         } catch (DataIntegrityViolationException ex) {
             throw new PlayerDuplicationException(
                 "Player with the provided first name, last name and birthdate already exists", ex.getCause());
@@ -50,11 +55,14 @@ public class PlayerService {
         player.setId(id);
 
         return playerRepository.findById(id).map(fetchedPlayer -> {
+            checkForDuplication(player, fetchedPlayer);
+
             Optional.ofNullable(player.getFirstName()).ifPresent(fetchedPlayer::setFirstName);
             Optional.ofNullable(player.getLastName()).ifPresent(fetchedPlayer::setLastName);
             Optional.ofNullable(player.getBirthdate()).ifPresent(fetchedPlayer::setBirthdate);
             Optional.ofNullable(player.getGender()).ifPresent(fetchedPlayer::setGender);
             Optional.ofNullable(player.getWeight()).ifPresent(fetchedPlayer::setWeight);
+
             return playerRepository.save(fetchedPlayer);
         }).orElseThrow(() -> new PlayerNotFoundException("Player can not be found in the database"));
     }
@@ -67,8 +75,29 @@ public class PlayerService {
         playerRepository.deleteById(id);
     }
 
-    public boolean isPlayerAssigned(Long id) {
+    private boolean isPlayerAssigned(Long id) {
         return !membershipRepository.findByPlayerId(id).isEmpty();
+    }
+
+    private void checkForDuplication(Player givenPlayer, Player playerToUpdate) {
+        if (givenPlayer.getFirstName() == null && givenPlayer.getLastName() == null
+            && givenPlayer.getBirthdate() == null) {
+            return;
+        }
+
+        Player playerToCheckForDuplication = Player.builder()
+            .firstName(Optional.ofNullable(givenPlayer.getFirstName()).orElse(playerToUpdate.getFirstName()))
+            .lastName(Optional.ofNullable(givenPlayer.getLastName()).orElse(playerToUpdate.getLastName()))
+            .birthdate(Optional.ofNullable(givenPlayer.getBirthdate()).orElse(playerToUpdate.getBirthdate()))
+            .build();
+
+        if (playerRepository
+            .findByFirstNameAndLastNameAndBirthdate(playerToCheckForDuplication.getFirstName(),
+                playerToCheckForDuplication.getLastName(), playerToCheckForDuplication.getBirthdate())
+            .isPresent()) {
+            throw new PlayerDuplicationException("Player with the provided first name, " +
+                "last name and birthdate already exists");
+        }
     }
 
 }

@@ -2,6 +2,7 @@ package bg.fmi.sports.tournament.organizer.service;
 
 import bg.fmi.sports.tournament.organizer.entity.SportType;
 import bg.fmi.sports.tournament.organizer.entity.Team;
+import bg.fmi.sports.tournament.organizer.exception.MissingSportTypeException;
 import bg.fmi.sports.tournament.organizer.exception.PlayerAlreadyInTeamException;
 import bg.fmi.sports.tournament.organizer.exception.TeamAlreadyInTournamentException;
 import bg.fmi.sports.tournament.organizer.exception.TeamNotFoundException;
@@ -74,6 +75,9 @@ public class TeamService {
         SportType teamSportType = null;
 
         if (team.getSportType() != null) {
+            if (team.getSportType().getSportType() == null || team.getSportType().getSportType().isBlank()) {
+                throw new MissingSportTypeException("Cannot create a team without a sport type");
+            }
             teamSportType = sportTypeRepository.findBySportType(team.getSportType().getSportType());
         }
 
@@ -82,11 +86,11 @@ public class TeamService {
         }
     }
 
-    public boolean isTeamRegistered(Long id) {
+    private boolean isTeamRegistered(Long id) {
         return !participationRepository.findByTeamId(id).isEmpty();
     }
 
-    public boolean isTeamHavingPlayers(Long id) {
+    private boolean isTeamHavingPlayers(Long id) {
         return !membershipRepository.findByTeamId(id).isEmpty();
     }
 

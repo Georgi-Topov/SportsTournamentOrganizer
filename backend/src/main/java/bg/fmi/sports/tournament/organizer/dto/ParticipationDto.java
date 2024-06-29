@@ -18,10 +18,10 @@ public class ParticipationDto {
 
     private ParticipationId id;
 
-    @NotNull(message = "The tournament to have a team registered for it cannot be unknown")
+    @NotNull(message = "The tournament to have a team registered for it cannot be null")
     private TournamentDto tournament;
 
-    @NotNull(message = "Registered team cannot be unknown")
+    @NotNull(message = "Registered team cannot be null")
     private TeamDto team;
 
     private Audit audit;

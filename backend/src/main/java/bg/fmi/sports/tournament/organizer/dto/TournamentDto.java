@@ -3,6 +3,7 @@ package bg.fmi.sports.tournament.organizer.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Null;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,25 +20,26 @@ import java.util.Objects;
 @Builder
 public class TournamentDto {
 
+    @Null(message = "The id of the tournament must not be entered manually")
     private Long id;
 
-    @NotNull(message = "The name of the tournament cannot be missing")
+    @NotNull(message = "The name of the tournament cannot be null")
     private String name;
 
-    @NotNull(message = "The sport type of the tournament cannot be missing")
+    @NotNull(message = "The sport type of the tournament cannot be null")
     private SportTypeDto sportType;
 
-    @NotNull(message = "The start date of the tournament cannot be missing")
+    @NotNull(message = "The start date of the tournament cannot be null")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy,HH:mm:ss")
     private LocalDateTime startDate;
 
-    @NotNull(message = "The end date of the tournament cannot be missing")
+    @NotNull(message = "The end date of the tournament cannot be null")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy,HH:mm:ss")
     private LocalDateTime endDate;
 
     private String description;
 
-    @NotNull(message = "The minimum number of players of a participating team cannot be missing")
+    @NotNull(message = "The minimum number of players of a participating team cannot be null")
     private Integer minimumPlayersPerTeam;
 
     private Integer maximumPlayersPerTeam;

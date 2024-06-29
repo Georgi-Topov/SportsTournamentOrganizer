@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -61,6 +62,13 @@ public class TournamentController {
 
         return new ResponseEntity<>(tournamentMapper.tournamentToDto(modifiedTournament), HttpStatus.OK);
     }
+
+//    @DeleteMapping("/{id}")
+//    public ResponseEntity<TournamentDto> deleteTeamById(@PathVariable Long id) {
+//        tournamentService.deleteTeamById(id);
+//
+//        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+//    }
 
     // todo(maybe) : implement an endpoint to deregister team from tournament (from participation table)
 
