@@ -33,5 +33,4 @@ public interface MembershipRepository extends JpaRepository<Membership, Membersh
         " WHERE m2.player_id = ?1" +
         " ) AND m.player_id = ?1", nativeQuery = true)
     Optional<Long> findLatestTeamForPlayer(Long playerId);
-
 }

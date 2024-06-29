@@ -1,0 +1,11 @@
+package bg.fmi.sports.tournament.organizer.repository;
+
+import bg.fmi.sports.tournament.organizer.entity.Match;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Set;
+
+@Repository
+public interface MatchRepository extends JpaRepository<Long, Match> {
+}

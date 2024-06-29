@@ -70,6 +70,12 @@ public class Team {
     @OneToMany(mappedBy = "team")
     private Set<TeamNotification> notification;
 
+    @OneToMany(mappedBy = "team")
+    private Set<Match> matches;
+
+    @OneToMany(mappedBy = "tournament")
+    private Set<Participation> tournaments;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
