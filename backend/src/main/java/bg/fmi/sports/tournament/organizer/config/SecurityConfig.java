@@ -24,10 +24,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable);
         http.authorizeHttpRequests(request -> {
-//            request.anyRequest().permitAll();
-            request.requestMatchers("/api/users/auth", "/api/users/register").permitAll();
+            request.requestMatchers("/api/users/auth", "/api/users/register", "/api/tournaments").permitAll();
             request.requestMatchers("/api/users/*").hasAnyRole(Role.ADMIN.getName());
-            request.requestMatchers("/api/tournaments/*").hasAnyRole(Role.MANAGER.getName(), Role.ADMIN.getName());
+            request.requestMatchers("/api/tournaments/*").hasAnyRole(Role.ADMIN.getName());
             request.requestMatchers("/api/teams/*").hasAnyRole(Role.ADMIN.getName(), Role.MANAGER.getName());
             request.anyRequest().authenticated();
         });

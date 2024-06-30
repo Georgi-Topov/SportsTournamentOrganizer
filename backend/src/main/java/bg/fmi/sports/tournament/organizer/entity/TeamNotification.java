@@ -5,6 +5,8 @@ import bg.fmi.sports.tournament.organizer.vo.NotificationType;
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
@@ -28,5 +30,6 @@ public class TeamNotification {
     private User user;
 
     @Column(name = "type")
+    @Enumerated(EnumType.STRING)
     private NotificationType type;
 }

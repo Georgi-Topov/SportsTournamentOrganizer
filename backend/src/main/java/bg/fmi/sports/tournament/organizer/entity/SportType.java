@@ -29,9 +29,11 @@ public class SportType {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    private Integer durationOfMatch;
+    @Builder.Default
+    private Integer durationOfMatchInMinutes = 90;
 
-    private Integer countOfTeamInMatch;
+    @Builder.Default
+    private Integer countOfTeamInMatch = 2;
 
     @NotNull(message = "The type of the sport cannot be null")
     @NotBlank(message = "The type of sport must have at least 1 non-white space character")

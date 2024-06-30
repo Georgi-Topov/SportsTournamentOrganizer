@@ -62,8 +62,8 @@ public class Team {
     @OneToMany(mappedBy = "team")
     private Set<Match> matches;
 
-    @OneToMany(mappedBy = "tournament")
-    private Set<Participation> tournaments;
+//    @OneToMany(mappedBy = "tournament")
+//    private Set<Participation> tournaments;
 
     @Override
     public boolean equals(Object o) {

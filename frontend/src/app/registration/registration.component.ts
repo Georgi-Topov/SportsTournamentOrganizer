@@ -35,13 +35,12 @@ export class RegistrationComponent {
               ) {
   }
 
-  //TODO: saving of JWT token
-
   Register(): void {
     let values = this.registration.value;
     this.registration.reset();
 
     values.password = sha256(values.password);
+    // TODO: secret key
 
     this.userService.createUser(values).subscribe({
         next: (response: any) => {

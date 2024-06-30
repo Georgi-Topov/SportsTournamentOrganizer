@@ -78,6 +78,9 @@ public class Tournament {
     @OneToMany(mappedBy = "tournament")
     private Set<TournamentNotification> notification;
 
+    @OneToMany(mappedBy = "tournament")
+    private Set<TournamentVenues> venues;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

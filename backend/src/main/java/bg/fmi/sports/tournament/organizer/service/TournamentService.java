@@ -11,6 +11,7 @@ import bg.fmi.sports.tournament.organizer.exception.MissingSportTypeException;
 import bg.fmi.sports.tournament.organizer.exception.TeamAlreadyInTournamentException;
 import bg.fmi.sports.tournament.organizer.exception.TournamentNotFoundException;
 import bg.fmi.sports.tournament.organizer.exception.TournamentOverException;
+import bg.fmi.sports.tournament.organizer.exception.UserNotAuthorizedException;
 import bg.fmi.sports.tournament.organizer.repository.ParticipationRepository;
 import bg.fmi.sports.tournament.organizer.repository.SportTypeRepository;
 import bg.fmi.sports.tournament.organizer.repository.TournamentRepository;
@@ -27,13 +28,79 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
-@Log
 public class TournamentService {
 
     private final UserService userService;
     private final TournamentRepository tournamentRepository;
     private final SportTypeRepository sportTypeRepository;
     private final ParticipationRepository participationRepository;
+
+    private void checkTournamentDates(Tournament newTournament, Tournament oldTournament) {
+        if (oldTournament.getEndDate().isBefore(LocalDateTime.now())) {
+            throw new TournamentOverException("Cannot change anything for a tournament when it is over");
+        }
+        if (newTournament.getStartDate() != null && newTournament.getEndDate() != null) {
+            if (!newTournament.getStartDate().isBefore(newTournament.getEndDate())) {
+                throw new InvalidStartEndDateForTournamentException("The start date cannot be after the end date");
+            }
+
+            if (oldTournament.getEndDate().isBefore(LocalDateTime.now())) {
+                throw new TournamentOverException("Cannot change anything for a tournament when it is over");
+            }
+
+            if (newTournament.getStartDate() != null && newTournament.getStartDate().isBefore(LocalDateTime.now())) {
+                throw new InvalidStartEndDateForTournamentException(
+                        "The start date cannot be changed to an earlier date than today"
+                );
+            }
+
+            if (!oldTournament.getStartDate().isAfter(LocalDateTime.now())
+                    && !oldTournament.getEndDate().isBefore(LocalDateTime.now())) {
+                if (newTournament.getStartDate() != null) {
+                    throw new InvalidStartEndDateForTournamentException(
+                            "The start date cannot be changed when the tournament is active"
+                    );
+                }
+            }
+
+            if (newTournament.getStartDate() != null && newTournament.getEndDate() != null) {
+                if (!newTournament.getStartDate().isBefore(newTournament.getEndDate())) {
+                    throw new InvalidStartEndDateForTournamentException("The start date cannot be after the end date");
+                } else {
+                    oldTournament.setStartDate(newTournament.getStartDate());
+                }
+            }
+
+            if (newTournament.getEndDate() != null && newTournament.getEndDate().isBefore(LocalDateTime.now())) {
+                throw new InvalidStartEndDateForTournamentException(
+                        "The end date cannot be changed to an earlier date than today"
+                );
+            }
+
+            if (newTournament.getEndDate() != null
+                    && newTournament.getEndDate().isBefore(oldTournament.getStartDate())) {
+                throw new InvalidStartEndDateForTournamentException(
+                        "The end date cannot be before the start date"
+                );
+            }
+        }
+    }
+
+    private void setSportTypeWithoutDuplication(Tournament tournament) {
+        SportType tournamentSportType = null;
+
+        if (tournament.getSportType() != null) {
+            if (tournament.getSportType().getSportType() == null
+                    || tournament.getSportType().getSportType().isBlank()) {
+                throw new MissingSportTypeException("Cannot create a tournament without a sport type");
+            }
+            tournamentSportType = sportTypeRepository.findBySportType(tournament.getSportType().getSportType());
+        }
+
+        if (tournamentSportType != null) {
+            tournament.setSportType(tournamentSportType);
+        }
+    }
 
     public TournamentService(UserService userService,
                              TournamentRepository tournamentRepository, SportTypeRepository sportTypeRepository,
@@ -122,74 +189,7 @@ public class TournamentService {
         return !participationRepository.findByTournamentId(id).isEmpty();
     }
 
-    private void setSportTypeWithoutDuplication(Tournament tournament) {
-        SportType tournamentSportType = null;
-
-        if (tournament.getSportType() != null) {
-            if (tournament.getSportType().getSportType() == null
-                || tournament.getSportType().getSportType().isBlank()) {
-                throw new MissingSportTypeException("Cannot create a tournament without a sport type");
-            }
-            tournamentSportType = sportTypeRepository.findBySportType(tournament.getSportType().getSportType());
-        }
-
-        if (tournamentSportType != null) {
-            tournament.setSportType(tournamentSportType);
-        }
-    }
-
     public Set<Tournament> getTournamentsByDateInterval(LocalDateTime start, LocalDateTime end) {
-        return tournamentRepository.findAllByCreatedDateAfterAndCreatedDateBefore(start, end);
+        return tournamentRepository.findTournamentByStartDateAfterAndStartDateBefore(start, end);
     }
-
-    private void checkTournamentDates(Tournament newTournament, Tournament oldTournament) {
-        if (oldTournament.getEndDate().isBefore(LocalDateTime.now())) {
-            throw new TournamentOverException("Cannot change anything for a tournament when it is over");
-        }
-        if (newTournament.getStartDate() != null && newTournament.getEndDate() != null) {
-            if (!newTournament.getStartDate().isBefore(newTournament.getEndDate())) {
-                throw new InvalidStartEndDateForTournamentException("The start date cannot be after the end date");
-            }
-
-            if (oldTournament.getEndDate().isBefore(LocalDateTime.now())) {
-                throw new TournamentOverException("Cannot change anything for a tournament when it is over");
-            }
-
-            if (newTournament.getStartDate() != null && newTournament.getStartDate().isBefore(LocalDateTime.now())) {
-                throw new InvalidStartEndDateForTournamentException(
-                        "The start date cannot be changed to an earlier date than today"
-                );
-            }
-
-            if (!oldTournament.getStartDate().isAfter(LocalDateTime.now())
-                    && !oldTournament.getEndDate().isBefore(LocalDateTime.now())) {
-                if (newTournament.getStartDate() != null) {
-                    throw new InvalidStartEndDateForTournamentException(
-                            "The start date cannot be changed when the tournament is active"
-                    );
-                }
-            }
-
-            if (newTournament.getStartDate() != null && newTournament.getEndDate() != null) {
-                if (!newTournament.getStartDate().isBefore(newTournament.getEndDate())) {
-                    throw new InvalidStartEndDateForTournamentException("The start date cannot be after the end date");
-                } else {
-                    oldTournament.setStartDate(newTournament.getStartDate());
-                }
-            }
-
-            if (newTournament.getEndDate() != null && newTournament.getEndDate().isBefore(LocalDateTime.now())) {
-                throw new InvalidStartEndDateForTournamentException(
-                        "The end date cannot be changed to an earlier date than today"
-                );
-            }
-
-            if (newTournament.getEndDate() != null
-                    && newTournament.getEndDate().isBefore(oldTournament.getStartDate())) {
-                throw new InvalidStartEndDateForTournamentException(
-                        "The end date cannot be before the start date"
-                );
-            }
-        }
-
 }

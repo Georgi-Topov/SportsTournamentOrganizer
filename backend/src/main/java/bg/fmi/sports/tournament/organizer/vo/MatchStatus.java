@@ -3,14 +3,14 @@ package bg.fmi.sports.tournament.organizer.vo;
 import lombok.Getter;
 
 @Getter
-public enum NotificationType {
-    ALL("all"),
-    O_IMPORTANT("only_important"),
-    NONE("none");
+public enum MatchStatus {
+    WAIT("wait"),
+    WIN("win"),
+    LOST("lost");
 
     private final String name;
 
-    NotificationType(String name) {
+    MatchStatus(String name) {
         this.name = name;
     }
 }
