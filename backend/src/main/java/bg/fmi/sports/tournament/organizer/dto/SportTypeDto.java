@@ -27,6 +27,10 @@ public class SportTypeDto {
 
     private Long version;
 
+    private Integer durationOfMatchInMinutes;
+
+    private Integer countOfTeamInMatch;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -41,7 +41,7 @@ public class TournamentManager {
             throw new NotEnoughTeamsInTournament("There not enough teams for the tournament to start: "
                     + teams.size());
         }
-        if (tournament.getVenues() == null && tournament.getVenues().isEmpty()) {
+        if (tournament.getVenues() == null || tournament.getVenues().isEmpty()) {
             throw new MissingVenueException("Tournament hasn't any venue!");
         }
         creators.put(tournament, new MatchCreator(this, tournament));

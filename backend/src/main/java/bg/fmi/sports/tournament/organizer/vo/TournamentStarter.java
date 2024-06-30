@@ -32,10 +32,9 @@ public class TournamentStarter {
     public void startTournaments() {
         LocalDateTime start = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         LocalDateTime end = start.plusMinutes(TIME_INTERVAL_BETWEEN_START);
-        log.info("TEST");
         for (Tournament tournament :
                 tournamentService.getTournamentsByDateInterval(start, end)) {
-            log.info("HAS TOURNAMENT");
+            log.info("I FOUND");
             try {
                 tournamentManager.startTournament(tournament);
             } catch (NotEnoughTeamsInTournament | MissingVenueException ex) {

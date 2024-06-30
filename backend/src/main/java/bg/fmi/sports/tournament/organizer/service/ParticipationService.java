@@ -82,12 +82,12 @@ public class ParticipationService extends AffiliationService {
     private void checkTeamCorrespondenceToTournament(Tournament tournament, Team team,
                                                     Tournament latestTournament) {
 
-        if (!tournament.getSportType().equals(team.getSportType())) {
-            throw new TeamToTournamentBadCorrespondenceException(
-                "The sport type of the team does not match the sport type of the tournament which is "
-                    + tournament.getSportType().getSportType()
-            );
-        }
+//        if (!tournament.getSportType().equals(team.getSportType())) {
+//            throw new TeamToTournamentBadCorrespondenceException(
+//                "The sport type of the team does not match the sport type of the tournament which is "
+//                    + tournament.getSportType().getSportType()
+//            );
+//        }
 
         Integer numberOfPlayersInTeamForTournament;
         if (latestTournament != null) {

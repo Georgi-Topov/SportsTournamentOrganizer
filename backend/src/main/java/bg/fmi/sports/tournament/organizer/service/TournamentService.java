@@ -190,6 +190,6 @@ public class TournamentService {
     }
 
     public Set<Tournament> getTournamentsByDateInterval(LocalDateTime start, LocalDateTime end) {
-        return tournamentRepository.findTournamentByStartDateAfterAndStartDateBefore(start, end);
+        return tournamentRepository.findTournamentByStartDateBetween(start, end);
     }
 }

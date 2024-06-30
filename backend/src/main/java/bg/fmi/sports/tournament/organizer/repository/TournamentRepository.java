@@ -9,5 +9,5 @@ import java.util.Set;
 
 @Repository
 public interface TournamentRepository extends JpaRepository<Tournament, Long> {
-    Set<Tournament> findTournamentByStartDateAfterAndStartDateBefore(LocalDateTime start, LocalDateTime end);
+    Set<Tournament> findTournamentByStartDateBetween(LocalDateTime start, LocalDateTime end);
 }

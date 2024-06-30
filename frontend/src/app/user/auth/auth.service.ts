@@ -17,6 +17,9 @@ export class AuthService {
     this.roleService.saveRole(role);
     this.userData.saveName(username);
     this.userData.saveEmail(email);
+
+    // for demo
+    console.log(token);
   }
 
   logout() {
