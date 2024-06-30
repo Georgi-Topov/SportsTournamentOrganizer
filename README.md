@@ -1,82 +1,87 @@
 # Sports Tournament Organizer
 
-## Database model
-
-The **Players** table consists of:
-* **id** - A unique ID for each player
-* **first_name** - Player's first name
-* **last_name** - Player's last name
-* **gender** - Player's gender. It can be useful for some sports.
-* **weight** - Player's weight. It can be used in some sports where players are divided into categories based on it.
+---
+## General information
+The idea of the project is to provide a web-based system for creating and managing sport events of any type.
+It makes the process of managing such events, where many tournaments, teams and players
+with many frequently changing relationships between them, convenient and pleasant.
 
 ---
+## Features and specification
+* User registration, authentication and authorization
+    * The system supports 3 user categories: manager, regular users and admins
+      where each category has a specific set of functionalities.
 
-Managers are users to register team's players. For that they have to be registered and logged in the system.  
-The **Managers** table consists of:
-* **id** - A unique ID for each manager
-* **first_name** - Manager's first name
-* **last_name** - Manager's last name
-* **email** - Manager's email. Email is set to be unique. It can be used to send updates to the team's manager.
-* **password** - Manager's password
+* Tournament creation and management
+    * A tournament gets created only by admins.
+    * It can be updated by any admin as long as the tournament has not started yet.
+    * It can be deleted only by the admin who created it as long as the tournament does not have any teams.
+    * Team registration to a tournament - It can be done only by the manager of the team
+      if the tournament has not started yet and the team is not registered to another tournament
+      and the team has enough players to play in it and the sport type of the team and the tournament match
 
----
+* Player and team management
+    * A player gets created only by users with manager role.
+    * It can be updated by any manager if the player is not assigned to a team,
+      otherwise only the manager of the team in which the player is assigned, can update it.
+    * It can be deleted only by a manager if the player has never been assigned to a team.
+    * A team gets created only by users with manager role.
+    * It can be updated only by the owning manager.
+    * It can be deleted only by the owning manager if the team never participated in any tournaments and never any players
+    * Player registration to a team - It can be done only by the manager of the team
+      if the player is not registered to another team at the moment and the team is not already registered to a tournament
 
-The **Teams** table consists of:
-* **id** - A unique ID for each team
-* **name** - Team's name
-* **sport_type** - The type of the sport that the team will participate in
-* **manager_id** - It references the Managers table
-
----
-
-The **Membership** table is used as an additional table to create a many-to-many relationship between the **Players** table and the **Teams** table. It consists of:
-* **player_id** - It references the Players table
-* **team_id** - It references the Teams table
-
----
-
-The **Tournaments** table uses a combination of the attributes **name**, **sport_type** and **tournament_type** as a primary key. It consists of:
-* **name** - The name of the tournament
-* **sport-type** - The type of sport (e.g. football, tennis, running, wrestling)
-* **tournament-type** - The type of the tournament (e.g. International, Local, Charity)
-* **start** - The start of the tournament
-* **end** - The end of the tournament
-* **description** - Description of the tournament based on the name the type of sport and type of the tournament itself
-
----
-
-The **Participation** table is used as an additional table to create a many-to-many relationship between the **Tournaments** table and the **Teams** table. It consists of:
-* **team_id** - It references the Teams table
-* **team_name** - It references the Teams table. With a query can be used with team_sport_type to ensure the third implementation detail written below.
-* **team_sport_type** - It references the Teams table
-* **tournament_name** - It references the Tournaments table
-* **tournament_sport_type** - It references the Tournaments table
-* **tournament_type** - It references the Tournaments table
+* Additional functionalities
+    * JWT
+        * Use case - feature providing an authentication mechanism which improves system scalability
+        * Implementation - makes use of several beans used in a separate config package
+    * Optimistic locking
+        * Use case - future-proof feature which can become very important
+          when traffic to the system gets huge. In such case it will become a frequent practise to have many users
+          try to change the same resource which may result in an inconsistent resource state.
+        * Implementation - makes use of @Version annotation applied to a version field of type Long
+          which is an attribute to the entity where such problem can arise. It identifies the current state of the resource.
 
 ---
+## REST endpoints
+![user-controller](./images/image1.png)
+![player-controller](./images/image3.png)
+![team-controller](./images/image4.png)
+![tournament-controller](./images/image5.png)
+![others-controller](./images/image6.png)
 
-In general the **Matches** table makes use of several tuples to represent a single match because the number of opponents can vary depending on the sport type. The table consists of:
-* **team_id** - It references the Teams table
-* **tournament_name** - It references the Tournaments table
-* **tournament_sport_type** - It references the Tournaments table
-* **tournament_type** - It references the Tournaments table
-* **venue_name** - It references the name of the place where the match will be played
-* **venue_location** - It references the location of the place since for different locations (e.g. countries) name of the places can be the same
-* **date_and_time** - The date and time of the match
-* **status** - Team's status for the given match (e.g. win, loss)
 
 ---
-
-The **Venues** represent a collection of exact locations that can be used for many matches in different tournaments. It consists of:
-* **name** - The name of the place where a match will be played
-* **location** - The location of the place
+## Database schema
+![database_schema](./images/image7.png)
 
 ---
+## Used technologies
+* Java 21
+* Spring Boot
+* Hibernate
+* PostgreSQL
+* Postman
+* JUnit 5
+* Mockito
+* Git
+* Docker
+* Angular
 
-### Important implementation details:
-1. During an active tournament a manager of a participating team cannot manage other teams
-2. A team can not participate in 2 (or more) tournaments of the same type if both tournaments are active
-3. A player can not be a member of 2 (or more) teams that are registered to the same active tournament
+---
+## Setup
+### Prerequisites (for the backend)
+* [Docker](https://docs.docker.com/get-docker/)
 
-### Database schema:
-![database_schema](./images/databse_schema.jpg)
+### Steps
+1. Clone the repository -> https://github.com/Georgi-Topov/SportsTournamentOrganizer.git
+3. Compile Spring boot application into jar file via Maven
+4. Write into terminal `docker -t yourNameOfImage`
+5. Use that image in docker-compose.yml
+2. Write into terminal docker-compose up
+4. In frontend directory write into terminal npm install
+5. After that write npm start
+
+### Testing
+The REST API can be tested by using:
+* Postman
