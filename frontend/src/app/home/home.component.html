@@ -1,0 +1,21 @@
+<!--@if (!loader.isLoading()) {-->
+<p>home works!</p>
+<nav>
+  <a routerLink="" class="btn btn-primary m-1">Home</a>
+  <br>
+  @if(!roleService.hasRole()) {
+    <a routerLink="/register" class="btn btn-primary m-1">Registration</a>
+    <br>
+    <a routerLink="/auth" class="btn btn-primary m-1">Login</a>
+    <br>
+  } @else {
+    <a href="#" (click)="logout()" class="btn btn-primary m-1">Logout</a>
+    <br>
+  }
+  @if (!roleService.isUser() && roleService.hasRole()) {
+    <a href="#" routerLink="/panel" class="btn btn-primary m-1">Panel</a>
+    <br>
+  }
+</nav>
+<!--}-->
+<router-outlet></router-outlet>
